@@ -3,7 +3,6 @@ import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, injec
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Category } from '../../../core/models/category.model';
 import { CategoryFilters } from '../../../core/models/filter.model';
-import { TaskType } from '../../../core/models/task.model';
 
 @Component({
   selector: 'app-filter-modal',
@@ -13,17 +12,15 @@ import { TaskType } from '../../../core/models/task.model';
 })
 export class FilterModalComponent implements OnChanges {
   @Input() categories: Category[] = [];
-  @Input() filters: CategoryFilters = { categoryName: '', taskType: '' };
+  @Input() filters: CategoryFilters = { categoryName: '' };
   @Output() applied = new EventEmitter<CategoryFilters>();
   @Output() cleared = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
   private readonly fb = inject(NonNullableFormBuilder);
 
-  readonly taskTypes: TaskType[] = ['Lead', 'Call', 'Appointment'];
   readonly form = this.fb.group({
-    categoryName: [''],
-    taskType: ['' as TaskType | '']
+    categoryName: ['']
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -37,7 +34,7 @@ export class FilterModalComponent implements OnChanges {
   }
 
   clear(): void {
-    this.form.reset({ categoryName: '', taskType: '' });
+    this.form.reset({ categoryName: '' });
     this.cleared.emit();
   }
 }

@@ -29,7 +29,7 @@ export class CategoryListComponent implements OnInit {
   readonly tasks = signal<Task[]>([]);
   readonly loading = signal(false);
   readonly errorMessage = signal('');
-  readonly filters = signal<CategoryFilters>({ categoryName: '', taskType: '' });
+  readonly filters = signal<CategoryFilters>({ categoryName: '' });
 
   showAddPanel = false;
   showFilterPanel = false;
@@ -37,7 +37,7 @@ export class CategoryListComponent implements OnInit {
   readonly visibleRows = computed<CategoryTableRow[]>(() => {
     const filters = this.filters();
     const categoryName = filters.categoryName.trim().toLowerCase();
-    const taskType = filters.taskType;
+
     const rows: CategoryTableRow[] = [];
 
     for (const category of this.categories()) {
@@ -49,13 +49,8 @@ export class CategoryListComponent implements OnInit {
 
       const categoryTasks = this.tasks().filter((task) => {
         const belongsToCategory = this.getTaskCategoryId(task) === category._id;
-        const matchesType = !taskType || task.type === taskType;
-        return belongsToCategory && matchesType;
+        return belongsToCategory;
       });
-
-      if (taskType && categoryTasks.length === 0) {
-        continue;
-      }
 
       rows.push({
         id: category._id,
@@ -70,7 +65,7 @@ export class CategoryListComponent implements OnInit {
           kind: 'task',
           category,
           task,
-          isFilteredTask: Boolean(taskType)
+          isFilteredTask: false
         });
       }
     }
@@ -121,13 +116,13 @@ export class CategoryListComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters.set({ categoryName: '', taskType: '' });
+    this.filters.set({ categoryName: '' });
     this.showFilterPanel = false;
   }
 
   hasActiveFilters(): boolean {
     const filters = this.filters();
-    return Boolean(filters.categoryName.trim() || filters.taskType);
+    return Boolean(filters.categoryName.trim());
   }
 
   labelFor(row: CategoryTableRow): string {

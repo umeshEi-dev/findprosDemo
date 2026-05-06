@@ -4,7 +4,7 @@ import { Task } from '../models/task.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
 export const createTask = asyncHandler(async (req, res) => {
-  const { name, categoryId, description, price, type } = req.body;
+  const { name, categoryId, description, price } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(categoryId)) {
     const error = new Error('A valid category is required');
@@ -28,8 +28,7 @@ export const createTask = asyncHandler(async (req, res) => {
       lead: price?.lead || '',
       call: price?.call || '',
       appointment: price?.appointment || ''
-    },
-    type
+    }
   });
 
   const populatedTask = await task.populate('categoryId', 'name description');
@@ -38,15 +37,11 @@ export const createTask = asyncHandler(async (req, res) => {
 });
 
 export const getTasks = asyncHandler(async (req, res) => {
-  const { categoryId, type } = req.query;
+  const { categoryId } = req.query;
   const filter = {};
 
   if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
     filter.categoryId = categoryId;
-  }
-
-  if (type && ['Lead', 'Call', 'Appointment'].includes(type)) {
-    filter.type = type;
   }
 
   const tasks = await Task.find(filter)

@@ -34,11 +34,6 @@ const taskSchema = new mongoose.Schema(
         trim: true,
         default: ''
       }
-    },
-    type: {
-      type: String,
-      enum: ['Lead', 'Call', 'Appointment'],
-      required: [true, 'Task type is required']
     }
   },
   {

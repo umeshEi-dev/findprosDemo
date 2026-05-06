@@ -24,10 +24,6 @@ export class CategoryApiService {
   getTasks(filters?: Partial<CategoryFilters> & { categoryId?: string }): Observable<Task[]> {
     let params = new HttpParams();
 
-    if (filters?.taskType) {
-      params = params.set('type', filters.taskType);
-    }
-
     if (filters?.categoryId) {
       params = params.set('categoryId', filters.categoryId);
     }

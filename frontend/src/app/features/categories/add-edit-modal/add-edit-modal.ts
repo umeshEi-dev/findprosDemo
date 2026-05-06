@@ -3,7 +3,6 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { Category } from '../../../core/models/category.model';
-import { TaskType } from '../../../core/models/task.model';
 import { CategoryApiService } from '../../../core/services/category-api.service';
 
 type AddMode = 'category' | 'task';
@@ -22,7 +21,7 @@ export class AddEditModalComponent {
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly api = inject(CategoryApiService);
 
-  readonly taskTypes: TaskType[] = ['Lead', 'Call', 'Appointment'];
+
   mode: AddMode = 'category';
   saving = false;
   errorMessage = '';
@@ -39,8 +38,7 @@ export class AddEditModalComponent {
     description: [''],
     priceLead: [''],
     priceCall: [''],
-    priceAppointment: [''],
-    type: ['Lead' as TaskType, Validators.required]
+    priceAppointment: ['']
   });
 
   setMode(mode: AddMode): void {
@@ -90,13 +88,12 @@ export class AddEditModalComponent {
           lead: value.priceLead,
           call: value.priceCall,
           appointment: value.priceAppointment
-        },
-        type: value.type
+        }
       })
       .pipe(finalize(() => (this.saving = false)))
       .subscribe({
         next: () => {
-          this.taskForm.reset({ type: 'Lead' });
+          this.taskForm.reset();
           this.saved.emit();
         },
         error: (error: unknown) => {

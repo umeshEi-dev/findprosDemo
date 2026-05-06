@@ -17,13 +17,7 @@
         </datalist>
       </label>
 
-      <label class="field select-field">
-        <span>Task Type</span>
-        <select formControlName="taskType">
-          <option value="">All</option>
-          <option *ngFor="let taskType of taskTypes" [value]="taskType">{{ taskType }}</option>
-        </select>
-      </label>
+
 
       <div class="actions">
         <button type="button" class="secondary-action" (click)="clear()">Clear</button>
