@@ -3,26 +3,45 @@ import { Category } from '../models/category.model.js';
 import { Task } from '../models/task.model.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 
-export const createTask = asyncHandler(async (req, res) => {
-  const { name, categoryId, description, price } = req.body;
+const normalizeCategoryIds = (payload = {}) => {
+  const fromArray = Array.isArray(payload.categoryIds) ? payload.categoryIds : [];
+  const fromSingle = payload.categoryId ? [payload.categoryId] : [];
+  const merged = [...fromArray, ...fromSingle]
+    .map((id) => String(id || '').trim())
+    .filter(Boolean);
 
-  if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+  return [...new Set(merged)];
+};
+
+export const createTask = asyncHandler(async (req, res) => {
+  const { name, description, price } = req.body;
+  const categoryIds = normalizeCategoryIds(req.body);
+
+  if (categoryIds.length === 0) {
+    const error = new Error('At least one valid category is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const hasInvalidCategory = categoryIds.some((id) => !mongoose.Types.ObjectId.isValid(id));
+  if (hasInvalidCategory) {
     const error = new Error('A valid category is required');
     error.statusCode = 400;
     throw error;
   }
 
-  const categoryExists = await Category.exists({ _id: categoryId });
+  const matchedCategories = await Category.countDocuments({ _id: { $in: categoryIds } });
 
-  if (!categoryExists) {
-    const error = new Error('Selected category was not found');
+  if (matchedCategories !== categoryIds.length) {
+    const error = new Error('One or more selected categories were not found');
     error.statusCode = 404;
     throw error;
   }
 
   const task = await Task.create({
     name,
-    categoryId,
+    categoryId: categoryIds[0],
+    categoryIds,
     description,
     price: {
       lead: price?.lead || '',
@@ -31,7 +50,10 @@ export const createTask = asyncHandler(async (req, res) => {
     }
   });
 
-  const populatedTask = await task.populate('categoryId', 'name description');
+  const populatedTask = await task.populate([
+    { path: 'categoryId', select: 'name description' },
+    { path: 'categoryIds', select: 'name description' }
+  ]);
 
   res.status(201).json(populatedTask);
 });
@@ -41,11 +63,12 @@ export const getTasks = asyncHandler(async (req, res) => {
   const filter = {};
 
   if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-    filter.categoryId = categoryId;
+    filter.$or = [{ categoryId }, { categoryIds: categoryId }];
   }
 
   const tasks = await Task.find(filter)
     .populate('categoryId', 'name description')
+    .populate('categoryIds', 'name description')
     .sort({ createdAt: -1 });
 
   res.json(tasks);
@@ -53,28 +76,35 @@ export const getTasks = asyncHandler(async (req, res) => {
 
 export const updateTask = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { name, categoryId, description, price } = req.body;
+  const { name, description, price } = req.body;
+  const categoryIds = normalizeCategoryIds(req.body);
 
-  if (categoryId && !mongoose.Types.ObjectId.isValid(categoryId)) {
+  if (categoryIds.length === 0) {
+    const error = new Error('At least one valid category is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const hasInvalidCategory = categoryIds.some((categoryId) => !mongoose.Types.ObjectId.isValid(categoryId));
+  if (hasInvalidCategory) {
     const error = new Error('A valid category is required');
     error.statusCode = 400;
     throw error;
   }
 
-  if (categoryId) {
-    const categoryExists = await Category.exists({ _id: categoryId });
-    if (!categoryExists) {
-      const error = new Error('Selected category was not found');
-      error.statusCode = 404;
-      throw error;
-    }
+  const matchedCategories = await Category.countDocuments({ _id: { $in: categoryIds } });
+  if (matchedCategories !== categoryIds.length) {
+    const error = new Error('One or more selected categories were not found');
+    error.statusCode = 404;
+    throw error;
   }
 
   const task = await Task.findByIdAndUpdate(
     id,
     {
       name,
-      categoryId,
+      categoryId: categoryIds[0],
+      categoryIds,
       description,
       price: {
         lead: price?.lead || '',
@@ -83,7 +113,10 @@ export const updateTask = asyncHandler(async (req, res) => {
       }
     },
     { new: true, runValidators: true }
-  ).populate('categoryId', 'name description');
+  ).populate([
+    { path: 'categoryId', select: 'name description' },
+    { path: 'categoryIds', select: 'name description' }
+  ]);
 
   if (!task) {
     const error = new Error('Task not found');

@@ -11,7 +11,16 @@ const taskSchema = new mongoose.Schema(
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Category',
-      required: [true, 'Category is required']
+      required: false
+    },
+    categoryIds: {
+      type: [
+        {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Category'
+        }
+      ],
+      default: []
     },
     description: {
       type: String,

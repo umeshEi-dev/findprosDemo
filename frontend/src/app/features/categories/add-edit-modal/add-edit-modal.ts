@@ -37,7 +37,7 @@ export class AddEditModalComponent implements OnChanges {
 
   readonly taskForm = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(160)]],
-    categoryId: ['', Validators.required],
+    categoryIds: this.fb.control<string[]>([], Validators.required),
     description: [''],
     priceLead: [''],
     priceCall: [''],
@@ -52,9 +52,10 @@ export class AddEditModalComponent implements OnChanges {
           this.categoryForm.patchValue(this.editItem.data);
         } else {
           const task = this.editItem.data as any; // Using any to access fields easily
+          const categoryIds = this.getTaskCategoryIds(task);
           this.taskForm.patchValue({
             name: task.name,
-            categoryId: typeof task.categoryId === 'string' ? task.categoryId : task.categoryId?._id,
+            categoryIds,
             description: task.description,
             priceLead: task.price?.lead || '',
             priceCall: task.price?.call || '',
@@ -84,7 +85,7 @@ export class AddEditModalComponent implements OnChanges {
       return [];
     }
 
-    return this.tasks.filter((task) => this.getTaskCategoryId(task) === categoryId);
+    return this.tasks.filter((task) => this.getTaskCategoryIds(task).includes(categoryId));
   }
 
   priceForTask(task: Task, key: 'lead' | 'call' | 'appointment'): string {
@@ -131,12 +132,14 @@ export class AddEditModalComponent implements OnChanges {
     }
 
     const value = this.taskForm.getRawValue();
+    const normalizedCategoryIds = (value.categoryIds || []).filter(Boolean);
     this.saving = true;
     this.errorMessage = '';
 
     const payload = {
       name: value.name,
-      categoryId: value.categoryId,
+      categoryId: normalizedCategoryIds[0],
+      categoryIds: normalizedCategoryIds,
       description: value.description,
       price: {
         lead: value.priceLead,
@@ -171,7 +174,14 @@ export class AddEditModalComponent implements OnChanges {
     return fallback;
   }
 
-  private getTaskCategoryId(task: Task): string {
-    return typeof task.categoryId === 'string' ? task.categoryId : task.categoryId._id;
+  private getTaskCategoryIds(task: Task): string[] {
+    const fromArray = Array.isArray(task.categoryIds)
+      ? task.categoryIds
+          .map((category) => (typeof category === 'string' ? category : category._id))
+          .filter(Boolean)
+      : [];
+    const fromSingle = typeof task.categoryId === 'string' ? task.categoryId : task.categoryId?._id;
+    const ids = [...fromArray, fromSingle].filter(Boolean);
+    return [...new Set(ids)];
   }
 }

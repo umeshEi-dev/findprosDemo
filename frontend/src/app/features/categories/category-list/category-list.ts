@@ -50,7 +50,7 @@ export class CategoryListComponent implements OnInit {
       }
 
       const categoryTasks = this.tasks().filter((task) => {
-        const belongsToCategory = this.getTaskCategoryId(task) === category._id;
+        const belongsToCategory = this.getTaskCategoryIds(task).includes(category._id);
         return belongsToCategory;
       });
 
@@ -142,7 +142,7 @@ export class CategoryListComponent implements OnInit {
   }
 
   categoryMetaFor(category: Category): string {
-    const taskCount = this.tasks().filter((task) => this.getTaskCategoryId(task) === category._id).length;
+    const taskCount = this.tasks().filter((task) => this.getTaskCategoryIds(task).includes(category._id)).length;
     const countLabel = taskCount || '--';
     const categoryId = category.categoryId?.trim() || '--';
     return `Category ID: ${categoryId} | Tasks: ${countLabel}`;
@@ -166,8 +166,15 @@ export class CategoryListComponent implements OnInit {
     return `${row.kind}-${row.id}`;
   }
 
-  private getTaskCategoryId(task: Task): string {
-    return typeof task.categoryId === 'string' ? task.categoryId : task.categoryId._id;
+  private getTaskCategoryIds(task: Task): string[] {
+    const fromArray = Array.isArray(task.categoryIds)
+      ? task.categoryIds
+          .map((category) => (typeof category === 'string' ? category : category._id))
+          .filter(Boolean)
+      : [];
+    const fromSingle = typeof task.categoryId === 'string' ? task.categoryId : task.categoryId?._id;
+    const ids = [...fromArray, fromSingle].filter(Boolean);
+    return [...new Set(ids)];
   }
 
   private extractError(error: unknown, fallback: string): string {

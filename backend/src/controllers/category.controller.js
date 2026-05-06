@@ -20,8 +20,19 @@ export const getCategories = asyncHandler(async (_req, res) => {
     {
       $lookup: {
         from: Task.collection.name,
-        localField: '_id',
-        foreignField: 'categoryId',
+        let: { categoryObjectId: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $or: [
+                  { $eq: ['$categoryId', '$$categoryObjectId'] },
+                  { $in: ['$$categoryObjectId', { $ifNull: ['$categoryIds', []] }] }
+                ]
+              }
+            }
+          }
+        ],
         as: 'tasks'
       }
     },

@@ -82,12 +82,11 @@
       </label>
 
       <label class="field select-field">
-        <span>Category</span>
-        <select formControlName="categoryId">
-          <option value="">Select Categories</option>
+        <span>Categories</span>
+        <select formControlName="categoryIds" multiple class="multi-select">
           <option *ngFor="let category of categories" [value]="category._id">{{ category.name }}</option>
         </select>
-        <small *ngIf="taskForm.controls.categoryId.touched && taskForm.controls.categoryId.invalid">Select a category.</small>
+        <small *ngIf="taskForm.controls.categoryIds.touched && taskForm.controls.categoryIds.invalid">Select at least one category.</small>
       </label>
 
       <label class="field full">
