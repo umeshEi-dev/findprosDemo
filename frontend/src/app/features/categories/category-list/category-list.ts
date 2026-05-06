@@ -31,6 +31,8 @@ export class CategoryListComponent implements OnInit {
   readonly errorMessage = signal('');
   readonly filters = signal<CategoryFilters>({ categoryName: '' });
 
+  editItem?: { kind: 'category' | 'task'; data: any };
+
   showAddPanel = false;
   showFilterPanel = false;
 
@@ -98,6 +100,12 @@ export class CategoryListComponent implements OnInit {
   }
 
   openAddPanel(): void {
+    this.editItem = undefined;
+    this.showAddPanel = true;
+  }
+
+  openEditPanel(row: CategoryTableRow): void {
+    this.editItem = { kind: row.kind, data: row.kind === 'category' ? row.category : row.task };
     this.showAddPanel = true;
   }
 

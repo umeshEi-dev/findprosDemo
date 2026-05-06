@@ -34,4 +34,12 @@ export class CategoryApiService {
   createTask(payload: CreateTaskPayload): Observable<Task> {
     return this.http.post<Task>(`${this.apiUrl}/tasks`, payload);
   }
+
+  updateCategory(id: string, payload: CreateCategoryPayload): Observable<Category> {
+    return this.http.put<Category>(`${this.apiUrl}/categories/${id}`, payload);
+  }
+
+  updateTask(id: string, payload: CreateTaskPayload): Observable<Task> {
+    return this.http.put<Task>(`${this.apiUrl}/tasks/${id}`, payload);
+  }
 }

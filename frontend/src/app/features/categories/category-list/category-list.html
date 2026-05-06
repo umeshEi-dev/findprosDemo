@@ -1,6 +1,7 @@
 <app-add-edit-modal
   *ngIf="showAddPanel"
   [categories]="categories()"
+  [editItem]="editItem"
   (closed)="closeAddPanel()"
   (saved)="handleSaved()"
 ></app-add-edit-modal>
@@ -53,7 +54,7 @@
               <td>{{ priceFor(row, 'appointment') }}</td>
               <td>
                 <div class="row-actions">
-                  <button type="button" aria-label="Edit">
+                  <button type="button" aria-label="Edit" (click)="openEditPanel(row)">
                     <span class="pencil-icon"></span>
                   </button>
                   <button type="button" aria-label="Delete">

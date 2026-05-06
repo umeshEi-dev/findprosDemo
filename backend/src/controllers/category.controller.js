@@ -34,3 +34,22 @@ export const getCategories = asyncHandler(async (_req, res) => {
 
   res.json(categories);
 });
+
+export const updateCategory = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, categoryId, description } = req.body;
+
+  const category = await Category.findByIdAndUpdate(
+    id,
+    { name, categoryId, description },
+    { new: true, runValidators: true }
+  );
+
+  if (!category) {
+    const error = new Error('Category not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  res.json(category);
+});

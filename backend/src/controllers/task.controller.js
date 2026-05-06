@@ -50,3 +50,46 @@ export const getTasks = asyncHandler(async (req, res) => {
 
   res.json(tasks);
 });
+
+export const updateTask = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { name, categoryId, description, price } = req.body;
+
+  if (categoryId && !mongoose.Types.ObjectId.isValid(categoryId)) {
+    const error = new Error('A valid category is required');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (categoryId) {
+    const categoryExists = await Category.exists({ _id: categoryId });
+    if (!categoryExists) {
+      const error = new Error('Selected category was not found');
+      error.statusCode = 404;
+      throw error;
+    }
+  }
+
+  const task = await Task.findByIdAndUpdate(
+    id,
+    {
+      name,
+      categoryId,
+      description,
+      price: {
+        lead: price?.lead || '',
+        call: price?.call || '',
+        appointment: price?.appointment || ''
+      }
+    },
+    { new: true, runValidators: true }
+  ).populate('categoryId', 'name description');
+
+  if (!task) {
+    const error = new Error('Task not found');
+    error.statusCode = 404;
+    throw error;
+  }
+
+  res.json(task);
+});

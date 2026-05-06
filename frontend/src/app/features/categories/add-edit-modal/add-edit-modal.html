@@ -1,18 +1,18 @@
 <section class="editor-shell">
   <header class="page-header">
-    <h1>Add Category / Task</h1>
+    <h1>{{ editItem ? 'Edit' : 'Add' }} {{ mode === 'category' ? 'Category' : 'Task' }}</h1>
     <button type="button" class="back-button" (click)="closed.emit()">Back</button>
   </header>
 
   <div class="editor-card">
     <div class="choice-row" role="radiogroup" aria-label="Add type">
-      <label class="choice">
-        <input type="radio" name="addMode" [checked]="mode === 'category'" (change)="setMode('category')" />
+      <label class="choice" [class.disabled]="!!editItem">
+        <input type="radio" name="addMode" [checked]="mode === 'category'" (change)="setMode('category')" [disabled]="!!editItem" />
         <span></span>
         Category
       </label>
-      <label class="choice">
-        <input type="radio" name="addMode" [checked]="mode === 'task'" (change)="setMode('task')" />
+      <label class="choice" [class.disabled]="!!editItem">
+        <input type="radio" name="addMode" [checked]="mode === 'task'" (change)="setMode('task')" [disabled]="!!editItem" />
         <span></span>
         Task
       </label>
