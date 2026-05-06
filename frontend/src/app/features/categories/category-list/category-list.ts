@@ -135,11 +135,17 @@ export class CategoryListComponent implements OnInit {
 
   labelFor(row: CategoryTableRow): string {
     if (row.kind === 'category') {
-      const taskCount = this.tasks().filter((task) => this.getTaskCategoryId(task) === row.category._id).length;
-      return `${row.category.name} : ${taskCount || '--'}`;
+      return row.category.name || '--';
     }
 
     return `${row.task?.name || ''} : --`;
+  }
+
+  categoryMetaFor(category: Category): string {
+    const taskCount = this.tasks().filter((task) => this.getTaskCategoryId(task) === category._id).length;
+    const countLabel = taskCount || '--';
+    const categoryId = category.categoryId?.trim() || '--';
+    return `Category ID: ${categoryId} | Tasks: ${countLabel}`;
   }
 
   descriptionFor(row: CategoryTableRow): string {

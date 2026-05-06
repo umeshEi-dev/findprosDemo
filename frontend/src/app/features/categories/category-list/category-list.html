@@ -45,9 +45,13 @@
               [class.filtered-row]="row.isFilteredTask"
             >
               <td>
-                <span class="row-title" [class.indented]="row.kind === 'task'">{{
-                  labelFor(row)
-                }}</span>
+                <ng-container *ngIf="row.kind === 'category'; else taskRowLabel">
+                  <span class="row-title">{{ labelFor(row) }}</span>
+                  <span class="row-subtitle">{{ categoryMetaFor(row.category) }}</span>
+                </ng-container>
+                <ng-template #taskRowLabel>
+                  <span class="row-title" [class.indented]="true">{{ labelFor(row) }}</span>
+                </ng-template>
               </td>
               <td>{{ descriptionFor(row) }}</td>
               <td>{{ priceFor(row, 'lead') }}</td>

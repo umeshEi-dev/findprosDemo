@@ -166,10 +166,18 @@ td:nth-child(6) {
 }
 
 .row-title {
-  display: inline-block;
+  display: block;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row-subtitle {
+  display: block;
+  margin-top: 2px;
+  color: #5d6a73;
+  font-size: 11px;
   white-space: nowrap;
 }
 
