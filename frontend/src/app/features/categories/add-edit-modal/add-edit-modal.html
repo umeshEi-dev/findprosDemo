@@ -1,0 +1,100 @@
+<section class="editor-shell">
+  <header class="page-header">
+    <h1>Add Category / Task</h1>
+    <button type="button" class="back-button" (click)="closed.emit()">Back</button>
+  </header>
+
+  <div class="editor-card">
+    <div class="choice-row" role="radiogroup" aria-label="Add type">
+      <label class="choice">
+        <input type="radio" name="addMode" [checked]="mode === 'category'" (change)="setMode('category')" />
+        <span></span>
+        Category
+      </label>
+      <label class="choice">
+        <input type="radio" name="addMode" [checked]="mode === 'task'" (change)="setMode('task')" />
+        <span></span>
+        Task
+      </label>
+    </div>
+
+    <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+    <form *ngIf="mode === 'category'" [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="form-grid">
+      <label class="field full">
+        <span>Category Name</span>
+        <input type="text" formControlName="name" placeholder="Category Name" />
+        <small *ngIf="categoryForm.controls.name.touched && categoryForm.controls.name.invalid">Category name is required.</small>
+      </label>
+
+      <label class="field full">
+        <span>Category ID</span>
+        <input type="text" formControlName="categoryId" placeholder="Category ID (e.g. CAT-01)" />
+        <small *ngIf="categoryForm.controls.categoryId.touched && categoryForm.controls.categoryId.invalid">Category ID is required.</small>
+      </label>
+
+      <label class="field full">
+        <span>Description</span>
+        <textarea formControlName="description" placeholder="Category Description"></textarea>
+      </label>
+
+      <div class="actions">
+        <button type="submit" class="primary-action" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save Category' }}
+        </button>
+      </div>
+    </form>
+
+    <form *ngIf="mode === 'task'" [formGroup]="taskForm" (ngSubmit)="saveTask()" class="form-grid task-form">
+      <label class="field">
+        <span>Task Name</span>
+        <input type="text" formControlName="name" placeholder="Task Name" />
+        <small *ngIf="taskForm.controls.name.touched && taskForm.controls.name.invalid">Task name is required.</small>
+      </label>
+
+      <label class="field select-field">
+        <span>Category</span>
+        <select formControlName="categoryId">
+          <option value="">Select Categories</option>
+          <option *ngFor="let category of categories" [value]="category._id">{{ category.name }}</option>
+        </select>
+        <small *ngIf="taskForm.controls.categoryId.touched && taskForm.controls.categoryId.invalid">Select a category.</small>
+      </label>
+
+      <label class="field full">
+        <span>Description</span>
+        <textarea formControlName="description" placeholder="Task Description"></textarea>
+      </label>
+
+      <div class="price-block full">
+        <h2>Price Information</h2>
+        <div class="price-grid">
+          <label class="field compact">
+            <span>Lead</span>
+            <input type="text" formControlName="priceLead" />
+          </label>
+          <label class="field compact">
+            <span>Call</span>
+            <input type="text" formControlName="priceCall" />
+          </label>
+          <label class="field compact">
+            <span>Appointment</span>
+            <input type="text" formControlName="priceAppointment" />
+          </label>
+          <label class="field compact select-field">
+            <span>Type</span>
+            <select formControlName="type">
+              <option *ngFor="let taskType of taskTypes" [value]="taskType">{{ taskType }}</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="actions full">
+        <button type="submit" class="primary-action" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save Task' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</section>

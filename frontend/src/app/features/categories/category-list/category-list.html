@@ -1,0 +1,85 @@
+<app-add-edit-modal
+  *ngIf="showAddPanel"
+  [categories]="categories()"
+  (closed)="closeAddPanel()"
+  (saved)="handleSaved()"
+></app-add-edit-modal>
+
+<ng-container *ngIf="!showAddPanel">
+  <section class="category-page">
+    <header class="topbar">
+      <h1>Categories</h1>
+      <div class="toolbar">
+        <label class="mini-choice">
+          <span></span>
+          Category
+        </label>
+        <label class="mini-choice">
+          <span></span>
+          Task
+        </label>
+        <button type="button" class="icon-tool" (click)="showFilterPanel = true" [class.active]="hasActiveFilters()" aria-label="Filter categories">
+          <span class="filter-icon"></span>
+        </button>
+        <span class="filter-text">Task Filter</span>
+        <button type="button" class="add-button" (click)="openAddPanel()">Add Category / Task</button>
+      </div>
+    </header>
+
+    <main class="table-wrap">
+      <div class="notice error" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+      <div class="notice" *ngIf="loading()">Loading categories...</div>
+
+      <div class="data-table" *ngIf="!loading()">
+        <table>
+          <thead>
+            <tr>
+              <th>Category / Task</th>
+              <th>Description</th>
+              <th>Leads</th>
+              <th>Warm Transfers</th>
+              <th>Inbounds</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of visibleRows(); trackBy: trackRow" [class.category-row]="row.kind === 'category'" [class.task-row]="row.kind === 'task'" [class.filtered-row]="row.isFilteredTask">
+              <td>
+                <span class="row-title" [class.indented]="row.kind === 'task'">{{ labelFor(row) }}</span>
+              </td>
+              <td>{{ descriptionFor(row) }}</td>
+              <td>{{ priceFor(row, 'lead') }}</td>
+              <td>{{ priceFor(row, 'call') }}</td>
+              <td>{{ priceFor(row, 'appointment') }}</td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" aria-label="Edit">
+                    <span class="pencil-icon"></span>
+                  </button>
+                  <button type="button" aria-label="Delete">
+                    <span class="trash-icon"></span>
+                  </button>
+                  <button type="button" aria-label="Filter" (click)="showFilterPanel = true">
+                    <span class="small-filter-icon"></span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="visibleRows().length === 0">
+              <td colspan="6" class="empty-state">No categories or tasks match the current filters.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </section>
+
+  <app-filter-modal
+    *ngIf="showFilterPanel"
+    [categories]="categories()"
+    [filters]="filters()"
+    (applied)="applyFilters($event)"
+    (cleared)="clearFilters()"
+    (closed)="showFilterPanel = false"
+  ></app-filter-modal>
+</ng-container>

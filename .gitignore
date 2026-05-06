@@ -8,3 +8,8 @@ logs/backend.err.log
 logs/backend.out.log
 logs/frontend.err.log
 logs/frontend.out.log
+frontend/.angular/
+frontend/.vscode/
+frontend/package-lock.json
+frontend/angular.json
+frontend/public/favicon.ico

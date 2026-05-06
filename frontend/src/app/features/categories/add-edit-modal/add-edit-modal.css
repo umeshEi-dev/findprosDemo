@@ -1,0 +1,224 @@
+:host {
+  display: block;
+}
+
+.editor-shell {
+  min-height: 100vh;
+  background: #f4f4f4;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 66px;
+  padding: 0 22px 0 10px;
+  border-bottom: 1px solid #dedede;
+  background: #f6f6f6;
+}
+
+.page-header h1 {
+  margin: 0;
+  color: #14202b;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.back-button {
+  min-width: 64px;
+  border: 0;
+  background: #f2f2f2;
+  color: #000;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.editor-card {
+  width: min(980px, calc(100vw - 48px));
+  margin: 18px auto 0;
+  padding: 26px;
+  border: 1px solid #d9dde0;
+  border-radius: 7px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.choice-row {
+  display: flex;
+  gap: 26px;
+  margin-bottom: 18px;
+}
+
+.choice {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #17212b;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.choice input {
+  position: absolute;
+  opacity: 0;
+}
+
+.choice span {
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cbd5dc;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.choice input:checked + span {
+  border: 2px solid #ef3b22;
+  box-shadow: inset 0 0 0 4px #fff;
+  background: #ef3b22;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px 30px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field.full,
+.full {
+  grid-column: 1 / -1;
+}
+
+.field span,
+.price-block h2 {
+  margin: 0;
+  color: #17212b;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.price-block h2 {
+  margin-bottom: 24px;
+  font-size: 18px;
+}
+
+input,
+textarea,
+select {
+  width: 100%;
+  border: 1px solid #cbd3da;
+  border-radius: 5px;
+  background: #fff;
+  color: #17212b;
+  font: inherit;
+  outline: none;
+}
+
+input,
+select {
+  height: 38px;
+  padding: 0 12px;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+  padding: 12px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #ef3b22;
+  box-shadow: 0 0 0 2px rgba(239, 59, 34, 0.08);
+}
+
+.select-field {
+  position: relative;
+}
+
+.select-field select {
+  appearance: none;
+  padding-right: 42px;
+}
+
+.select-field::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  bottom: 15px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid #6f777d;
+  border-bottom: 2px solid #6f777d;
+  pointer-events: none;
+  transform: rotate(45deg);
+}
+
+.price-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 140px));
+  gap: 16px;
+}
+
+.compact input,
+.compact select {
+  max-width: 140px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.primary-action {
+  min-width: 100px;
+  height: 34px;
+  border: 0;
+  border-radius: 4px;
+  background: #f7b8ae;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-action:not(:disabled) {
+  background: #ef3b22;
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+}
+
+small,
+.form-error {
+  color: #b3261e;
+  font-size: 12px;
+}
+
+.form-error {
+  margin: 0 0 14px;
+}
+
+@media (max-width: 760px) {
+  .editor-card {
+    width: calc(100vw - 24px);
+    padding: 18px;
+  }
+
+  .form-grid,
+  .price-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .compact input,
+  .compact select {
+    max-width: none;
+  }
+}
