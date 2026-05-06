@@ -10,19 +10,12 @@
     <header class="topbar">
       <h1>Categories</h1>
       <div class="toolbar">
-        <label class="mini-choice">
-          <span></span>
-          Category
-        </label>
-        <label class="mini-choice">
-          <span></span>
-          Task
-        </label>
-        <button type="button" class="icon-tool" (click)="showFilterPanel = true" [class.active]="hasActiveFilters()" aria-label="Filter categories">
-          <span class="filter-icon"></span>
+        <label class="mini-choice"> <span></span>Category</label>
+        <label class="mini-choice"><span></span>Task</label>
+        <label class="mini-choice"><span></span>Task Filter</label>
+        <button type="button" class="add-button" (click)="openAddPanel()">
+          Add Category / Task
         </button>
-        <span class="filter-text">Task Filter</span>
-        <button type="button" class="add-button" (click)="openAddPanel()">Add Category / Task</button>
       </div>
     </header>
 
@@ -43,9 +36,16 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let row of visibleRows(); trackBy: trackRow" [class.category-row]="row.kind === 'category'" [class.task-row]="row.kind === 'task'" [class.filtered-row]="row.isFilteredTask">
+            <tr
+              *ngFor="let row of visibleRows(); trackBy: trackRow"
+              [class.category-row]="row.kind === 'category'"
+              [class.task-row]="row.kind === 'task'"
+              [class.filtered-row]="row.isFilteredTask"
+            >
               <td>
-                <span class="row-title" [class.indented]="row.kind === 'task'">{{ labelFor(row) }}</span>
+                <span class="row-title" [class.indented]="row.kind === 'task'">{{
+                  labelFor(row)
+                }}</span>
               </td>
               <td>{{ descriptionFor(row) }}</td>
               <td>{{ priceFor(row, 'lead') }}</td>
@@ -66,7 +66,9 @@
               </td>
             </tr>
             <tr *ngIf="visibleRows().length === 0">
-              <td colspan="6" class="empty-state">No categories or tasks match the current filters.</td>
+              <td colspan="6" class="empty-state">
+                No categories or tasks match the current filters.
+              </td>
             </tr>
           </tbody>
         </table>
