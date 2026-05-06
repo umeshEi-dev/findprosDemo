@@ -38,6 +38,35 @@
         <textarea formControlName="description" placeholder="Category Description"></textarea>
       </label>
 
+      <section class="related-tasks full" *ngIf="editItem?.kind === 'category' && relatedTasksForEditingCategory() as relatedTasks">
+        <h2>Related Tasks</h2>
+
+        <div class="tasks-table-wrapper" *ngIf="relatedTasks.length; else noRelatedTasks">
+          <table class="tasks-table">
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Leads</th>
+                <th>Warm Transfers</th>
+                <th>Inbounds</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let task of relatedTasks">
+                <td>{{ task.name || '--' }}</td>
+                <td>{{ priceForTask(task, 'lead') }}</td>
+                <td>{{ priceForTask(task, 'call') }}</td>
+                <td>{{ priceForTask(task, 'appointment') }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <ng-template #noRelatedTasks>
+          <p class="no-tasks">No tasks are mapped to this category.</p>
+        </ng-template>
+      </section>
+
       <div class="actions">
         <button type="submit" class="primary-action" [disabled]="saving">
           {{ saving ? 'Saving...' : 'Save Category' }}

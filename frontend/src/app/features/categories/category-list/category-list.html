@@ -1,6 +1,7 @@
 <app-add-edit-modal
   *ngIf="showAddPanel"
   [categories]="categories()"
+  [tasks]="tasks()"
   [editItem]="editItem"
   (closed)="closeAddPanel()"
   (saved)="handleSaved()"

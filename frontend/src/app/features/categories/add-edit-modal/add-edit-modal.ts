@@ -4,6 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { finalize } from 'rxjs';
 import { Category } from '../../../core/models/category.model';
 import { CategoryApiService } from '../../../core/services/category-api.service';
+import { Task } from '../../../core/models/task.model';
 
 type AddMode = 'category' | 'task';
 
@@ -15,6 +16,7 @@ type AddMode = 'category' | 'task';
 })
 export class AddEditModalComponent implements OnChanges {
   @Input() categories: Category[] = [];
+  @Input() tasks: Task[] = [];
   @Input() editItem?: { kind: 'category' | 'task'; data: any };
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<void>();
@@ -70,6 +72,29 @@ export class AddEditModalComponent implements OnChanges {
   setMode(mode: AddMode): void {
     this.mode = mode;
     this.errorMessage = '';
+  }
+
+  relatedTasksForEditingCategory(): Task[] {
+    if (this.editItem?.kind !== 'category') {
+      return [];
+    }
+
+    const categoryId = this.editItem.data?._id;
+    if (!categoryId) {
+      return [];
+    }
+
+    return this.tasks.filter((task) => this.getTaskCategoryId(task) === categoryId);
+  }
+
+  priceForTask(task: Task, key: 'lead' | 'call' | 'appointment'): string {
+    const value = task.price?.[key]?.trim();
+
+    if (!value) {
+      return '--';
+    }
+
+    return value.startsWith('$') ? value : `$${value}`;
   }
 
   saveCategory(): void {
@@ -144,5 +169,9 @@ export class AddEditModalComponent implements OnChanges {
     }
 
     return fallback;
+  }
+
+  private getTaskCategoryId(task: Task): string {
+    return typeof task.categoryId === 'string' ? task.categoryId : task.categoryId._id;
   }
 }
