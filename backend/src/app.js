@@ -3,6 +3,7 @@ import express from 'express';
 import categoryRoutes from './routes/category.routes.js';
 import taskRoutes from './routes/task.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
+import locationRoutes from './routes/location.routes.js';
 
 const app = express();
 
@@ -19,6 +20,7 @@ app.get('/api/health', (_req, res) => {
 
 app.use('/api/categories', categoryRoutes);
 app.use('/api/tasks', taskRoutes);
+app.use('/api',locationRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
