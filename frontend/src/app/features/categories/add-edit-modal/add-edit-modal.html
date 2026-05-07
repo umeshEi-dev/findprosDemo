@@ -7,12 +7,24 @@
   <div class="editor-card">
     <div class="choice-row" role="radiogroup" aria-label="Add type">
       <label class="choice" [class.disabled]="!!editItem">
-        <input type="radio" name="addMode" [checked]="mode === 'category'" (change)="setMode('category')" [disabled]="!!editItem" />
+        <input
+          type="radio"
+          name="addMode"
+          [checked]="mode === 'category'"
+          (change)="setMode('category')"
+          [disabled]="!!editItem"
+        />
         <span></span>
         Category
       </label>
       <label class="choice" [class.disabled]="!!editItem">
-        <input type="radio" name="addMode" [checked]="mode === 'task'" (change)="setMode('task')" [disabled]="!!editItem" />
+        <input
+          type="radio"
+          name="addMode"
+          [checked]="mode === 'task'"
+          (change)="setMode('task')"
+          [disabled]="!!editItem"
+        />
         <span></span>
         Task
       </label>
@@ -20,17 +32,29 @@
 
     <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
 
-    <form *ngIf="mode === 'category'" [formGroup]="categoryForm" (ngSubmit)="saveCategory()" class="form-grid">
+    <form
+      *ngIf="mode === 'category'"
+      [formGroup]="categoryForm"
+      (ngSubmit)="saveCategory()"
+      class="form-grid"
+    >
       <label class="field full">
         <span>Category Name</span>
         <input type="text" formControlName="name" placeholder="Category Name" />
-        <small *ngIf="categoryForm.controls.name.touched && categoryForm.controls.name.invalid">Category name is required.</small>
+        <small *ngIf="categoryForm.controls.name.touched && categoryForm.controls.name.invalid"
+          >Category name is required.</small
+        >
       </label>
 
       <label class="field full">
         <span>Category ID</span>
         <input type="text" formControlName="categoryId" placeholder="Category ID (e.g. CAT-01)" />
-        <small *ngIf="categoryForm.controls.categoryId.touched && categoryForm.controls.categoryId.invalid">Category ID is required.</small>
+        <small
+          *ngIf="
+            categoryForm.controls.categoryId.touched && categoryForm.controls.categoryId.invalid
+          "
+          >Category ID is required.</small
+        >
       </label>
 
       <label class="field full">
@@ -38,7 +62,10 @@
         <textarea formControlName="description" placeholder="Category Description"></textarea>
       </label>
 
-      <section class="related-tasks full" *ngIf="editItem?.kind === 'category' && relatedTasksForEditingCategory() as relatedTasks">
+      <section
+        class="related-tasks full"
+        *ngIf="editItem?.kind === 'category' && relatedTasksForEditingCategory() as relatedTasks"
+      >
         <h2>Related Tasks</h2>
 
         <div class="tasks-table-wrapper" *ngIf="relatedTasks.length; else noRelatedTasks">
@@ -74,19 +101,31 @@
       </div>
     </form>
 
-    <form *ngIf="mode === 'task'" [formGroup]="taskForm" (ngSubmit)="saveTask()" class="form-grid task-form">
+    <form
+      *ngIf="mode === 'task'"
+      [formGroup]="taskForm"
+      (ngSubmit)="saveTask()"
+      class="form-grid task-form"
+    >
       <label class="field">
         <span>Task Name</span>
         <input type="text" formControlName="name" placeholder="Task Name" />
-        <small *ngIf="taskForm.controls.name.touched && taskForm.controls.name.invalid">Task name is required.</small>
+        <small *ngIf="taskForm.controls.name.touched && taskForm.controls.name.invalid"
+          >Task name is required.</small
+        >
       </label>
 
       <label class="field select-field">
         <span>Categories</span>
         <select formControlName="categoryIds" multiple class="multi-select">
-          <option *ngFor="let category of categories" [value]="category._id">{{ category.name }}</option>
+          <option *ngFor="let category of categories" [value]="category._id">
+            {{ category.name }}
+          </option>
         </select>
-        <small *ngIf="taskForm.controls.categoryIds.touched && taskForm.controls.categoryIds.invalid">Select at least one category.</small>
+        <small
+          *ngIf="taskForm.controls.categoryIds.touched && taskForm.controls.categoryIds.invalid"
+          >Select at least one category.</small
+        >
       </label>
 
       <label class="field full">
@@ -111,7 +150,124 @@
           </label>
         </div>
       </div>
+      <!-- ═══════════════════════════════════════════
+     PRICE BASED ON LOCATION SECTION
+════════════════════════════════════════════ -->
+      <div class="location-section full">
+        <h2 class="section-title">
+          Price based on Location
+          <button
+            type="button"
+            class="toggle-location-btn"
+            (click)="showLocationPanel = !showLocationPanel"
+          >
+            {{ showLocationPanel ? '▲ Hide' : '▼ Add Location' }}
+          </button>
+        </h2>
 
+        <div class="location-panel" *ngIf="showLocationPanel">
+          <!-- Search Box -->
+          <div class="location-search-wrap">
+            <input
+              type="text"
+              class="location-search-input"
+              placeholder="Search city, state..."
+              [value]="locationSearchText"
+              (input)="onLocationSearch($any($event.target).value)"
+            />
+            <span class="searching-text" *ngIf="locationSearching">Searching...</span>
+
+            <!-- Dropdown Results -->
+            <ul class="location-dropdown" *ngIf="locationResults.length > 0">
+              <li
+                *ngFor="let loc of locationResults"
+                class="location-dropdown-item"
+                (click)="selectLocation(loc)"
+              >
+                📍 {{ loc.city }}, {{ loc.state }}, {{ loc.type }}
+                <span class="loc-sub">{{ loc.location }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Selected Location Badge -->
+          <div class="selected-location-badge" *ngIf="selectedLocation">
+            ✅ Selected: <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
+            <button type="button" class="clear-loc-btn" (click)="resetLocationState()">
+              ✕ Clear
+            </button>
+          </div>
+
+          <!-- Zipcodes Table -->
+          <div class="zipcodes-wrap" *ngIf="selectedLocation">
+            <div class="loading-text" *ngIf="zipcodesLoading">Loading zipcodes...</div>
+
+            <div *ngIf="!zipcodesLoading && zipcodes.length > 0">
+              <table class="zip-table">
+                <thead>
+                  <tr>
+                    <th>✓</th>
+                    <th>Zipcode</th>
+                    <th>Leads ($)</th>
+                    <th>Warm Transfers ($)</th>
+                    <th>Inbounds ($)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let zip of zipcodes; let i = index"
+                    [class.zip-checked]="zip.isChecked"
+                  >
+                    <td>
+                      <input
+                        type="checkbox"
+                        [checked]="zip.isChecked"
+                        (change)="toggleZipCheck(i)"
+                      />
+                    </td>
+                    <td class="zip-code-cell">{{ zip.zipcode }}</td>
+                    <td>
+                      <input
+                        type="number"
+                        class="price-input"
+                        [value]="zip.prices.leads"
+                        (input)="updateZipPrice(i, 'leads', $any($event.target).value)"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        class="price-input"
+                        [value]="zip.prices.warm_transfers"
+                        (input)="updateZipPrice(i, 'warm_transfers', $any($event.target).value)"
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        class="price-input"
+                        [value]="zip.prices.inbounds"
+                        (input)="updateZipPrice(i, 'inbounds', $any($event.target).value)"
+                      />
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Save Location Pricing Button -->
+              <div class="loc-save-row">
+                <button type="button" class="save-loc-btn" (click)="saveLocationPricing()">
+                  Save Location Pricing
+                </button>
+              </div>
+            </div>
+
+            <p class="no-zip-msg" *ngIf="!zipcodesLoading && zipcodes.length === 0">
+              No zipcodes found for this location.
+            </p>
+          </div>
+        </div>
+      </div>
       <div class="actions full">
         <button type="submit" class="primary-action" [disabled]="saving">
           {{ saving ? 'Saving...' : 'Save Task' }}
