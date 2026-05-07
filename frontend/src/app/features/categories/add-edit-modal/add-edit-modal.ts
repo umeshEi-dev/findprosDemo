@@ -10,6 +10,13 @@ import { Location, ZipcodeResult, ZipcodePricing } from '../../../core/models/lo
 type AddMode = 'category' | 'task';
 type ZipPriceField = 'leads' | 'warm_transfers' | 'inbounds';
 type BulkSnapshotItem = { index: number; prices: Record<ZipPriceField, number> };
+interface SavedTaskLocation {
+  location?: string;
+  city?: string;
+  state?: string;
+  type?: string;
+  service_area_zipcodes?: ZipcodePricing[];
+}
 
 @Component({
   selector: 'app-add-edit-modal',
@@ -105,6 +112,12 @@ export class AddEditModalComponent implements OnChanges {
             priceCall: task.price?.call || '',
             priceAppointment: task.price?.appointment || ''
           });
+          const primaryCategoryId = categoryIds[0];
+          if (primaryCategoryId) {
+            this.loadStoredLocationPricing(primaryCategoryId);
+          } else {
+            this.resetLocationState();
+          }
         }
       } else {
         this.mode = 'category';
@@ -238,6 +251,54 @@ export class AddEditModalComponent implements OnChanges {
 
   canUndoBulkPrices(): boolean {
     return this.lastBulkSnapshot.length > 0;
+  }
+
+  private loadStoredLocationPricing(categoryId: string): void {
+    this.zipcodesLoading = true;
+    this.errorMessage = '';
+    this.bulkApplyMessage = '';
+    this.lastBulkSnapshot = [];
+
+    this.api.getLocationPricing(categoryId).pipe(
+      finalize(() => this.zipcodesLoading = false)
+    ).subscribe({
+      next: (savedLocations: SavedTaskLocation[]) => {
+        const latestLocation = savedLocations?.[0];
+
+        if (!latestLocation) {
+          this.resetLocationState();
+          this.showLocationPanel = true;
+          return;
+        }
+
+        this.selectedLocation = {
+          _id: '',
+          location: latestLocation.location || '',
+          city: latestLocation.city || '',
+          state: latestLocation.state || '',
+          stateShort: latestLocation.state || '',
+          type: latestLocation.type || 'city'
+        };
+
+        this.locationSearchText = [this.selectedLocation.city, this.selectedLocation.state]
+          .filter(Boolean)
+          .join(', ');
+        this.zipcodes = (latestLocation.service_area_zipcodes || []).map((zip) => ({
+          zipcode: zip.zipcode,
+          isChecked: !!zip.isChecked,
+          prices: {
+            leads: Number(zip.prices?.leads) || 0,
+            warm_transfers: Number(zip.prices?.warm_transfers) || 0,
+            inbounds: Number(zip.prices?.inbounds) || 0
+          }
+        }));
+        this.showLocationPanel = true;
+      },
+      error: () => {
+        this.resetLocationState();
+        this.showLocationPanel = true;
+      }
+    });
   }
 
   resetLocationState(): void {
