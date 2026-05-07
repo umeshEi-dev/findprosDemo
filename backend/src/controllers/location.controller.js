@@ -17,7 +17,7 @@ export const getLocation = asyncHandler(async (req, res) => {
 
   const rawLocations = await Location.find(filter).sort({ state: 1, city: 1 });
 
-  // ✅ Har location ke saath type add karo
+  // /Har location ke saath type add karo
   const locations = rawLocations.map(loc => {
     const obj = loc.toObject();
 

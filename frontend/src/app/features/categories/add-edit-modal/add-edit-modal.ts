@@ -8,6 +8,8 @@ import { Task } from '../../../core/models/task.model';
 import { Location, ZipcodeResult, ZipcodePricing } from '../../../core/models/location.model';
 
 type AddMode = 'category' | 'task';
+type ZipPriceField = 'leads' | 'warm_transfers' | 'inbounds';
+type BulkSnapshotItem = { index: number; prices: Record<ZipPriceField, number> };
 
 @Component({
   selector: 'app-add-edit-modal',
@@ -38,6 +40,12 @@ export class AddEditModalComponent implements OnChanges {
   // ─── Zipcode State ───────────────────────────────────
   zipcodes: ZipcodePricing[] = [];
   zipcodesLoading = false;
+  bulkLeads = 0;
+  bulkWarmTransfers = 0;
+  bulkInbounds = 0;
+  bulkApplyMessage = '';
+  private bulkMessageTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastBulkSnapshot: BulkSnapshotItem[] = [];
 
   // ─── Location Panel toggle ───────────────────────────
   showLocationPanel = false;
@@ -131,6 +139,8 @@ export class AddEditModalComponent implements OnChanges {
 
     this.zipcodesLoading = true;
     this.zipcodes = [];
+    this.bulkApplyMessage = '';
+    this.lastBulkSnapshot = [];
 
     if (!stateCode) {
       this.zipcodesLoading = false;
@@ -163,11 +173,87 @@ export class AddEditModalComponent implements OnChanges {
     this.zipcodes[index].isChecked = !this.zipcodes[index].isChecked;
   }
 
+  applyBulkPrices(): void {
+    if (!this.zipcodes.length) return;
+
+    const hasCheckedRows = this.zipcodes.some(zip => zip.isChecked);
+    let updatedCount = 0;
+    const snapshot: BulkSnapshotItem[] = [];
+
+    this.zipcodes.forEach((zip, index) => {
+      if (hasCheckedRows && !zip.isChecked) return;
+
+      snapshot.push({
+        index,
+        prices: {
+          leads: zip.prices.leads,
+          warm_transfers: zip.prices.warm_transfers,
+          inbounds: zip.prices.inbounds
+        }
+      });
+
+      zip.prices.leads = Number(this.bulkLeads) || 0;
+      zip.prices.warm_transfers = Number(this.bulkWarmTransfers) || 0;
+      zip.prices.inbounds = Number(this.bulkInbounds) || 0;
+      updatedCount += 1;
+    });
+
+    this.lastBulkSnapshot = snapshot;
+    this.bulkApplyMessage = `Applied to ${updatedCount} zipcodes`;
+
+    if (this.bulkMessageTimer) {
+      clearTimeout(this.bulkMessageTimer);
+    }
+
+    this.bulkMessageTimer = setTimeout(() => {
+      this.bulkApplyMessage = '';
+      this.bulkMessageTimer = null;
+    }, 2200);
+  }
+
+  undoBulkPrices(): void {
+    if (!this.lastBulkSnapshot.length) return;
+
+    this.lastBulkSnapshot.forEach(({ index, prices }) => {
+      const row = this.zipcodes[index];
+      if (!row) return;
+      row.prices.leads = prices.leads;
+      row.prices.warm_transfers = prices.warm_transfers;
+        row.prices.inbounds = prices.inbounds;
+      });
+
+    const restoredCount = this.lastBulkSnapshot.length;
+    this.lastBulkSnapshot = [];
+    this.bulkApplyMessage = `↩️ Restored ${restoredCount} zipcodes`;
+
+    if (this.bulkMessageTimer) {
+      clearTimeout(this.bulkMessageTimer);
+    }
+
+    this.bulkMessageTimer = setTimeout(() => {
+      this.bulkApplyMessage = '';
+      this.bulkMessageTimer = null;
+    }, 2200);
+  }
+
+  canUndoBulkPrices(): boolean {
+    return this.lastBulkSnapshot.length > 0;
+  }
+
   resetLocationState(): void {
     this.locationSearchText = '';
     this.locationResults = [];
     this.selectedLocation = null;
     this.zipcodes = [];
+    this.bulkLeads = 0;
+    this.bulkWarmTransfers = 0;
+    this.bulkInbounds = 0;
+    this.bulkApplyMessage = '';
+    this.lastBulkSnapshot = [];
+    if (this.bulkMessageTimer) {
+      clearTimeout(this.bulkMessageTimer);
+      this.bulkMessageTimer = null;
+    }
     this.showLocationPanel = false;
   }
 

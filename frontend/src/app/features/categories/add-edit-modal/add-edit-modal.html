@@ -203,6 +203,54 @@
             <div class="loading-text" *ngIf="zipcodesLoading">Loading zipcodes...</div>
 
             <div *ngIf="!zipcodesLoading && zipcodes.length > 0">
+              <div class="bulk-fill-section">
+                <div class="bulk-fill-header">
+                  <h3>Bulk Price Fill</h3>
+                  <p class="bulk-apply-message" *ngIf="bulkApplyMessage">{{ bulkApplyMessage }}</p>
+                </div>
+
+                <div class="bulk-fill-grid">
+                  <label class="bulk-field">
+                    <span>Leads</span>
+                    <input
+                      type="number"
+                      class="price-input"
+                      [value]="bulkLeads"
+                      (input)="bulkLeads = +($any($event.target).value || 0)"
+                    />
+                  </label>
+                  <label class="bulk-field">
+                    <span>Warm Transfers</span>
+                    <input
+                      type="number"
+                      class="price-input"
+                      [value]="bulkWarmTransfers"
+                      (input)="bulkWarmTransfers = +($any($event.target).value || 0)"
+                    />
+                  </label>
+                  <label class="bulk-field">
+                    <span>Inbounds</span>
+                    <input
+                      type="number"
+                      class="price-input"
+                      [value]="bulkInbounds"
+                      (input)="bulkInbounds = +($any($event.target).value || 0)"
+                    />
+                  </label>
+                  <button type="button" class="apply-bulk-btn" (click)="applyBulkPrices()">
+                    Apply To All Zipcodes
+                  </button>
+                  <button
+                    type="button"
+                    class="undo-bulk-btn"
+                    (click)="undoBulkPrices()"
+                    [disabled]="!canUndoBulkPrices()"
+                  >
+                    Undo Bulk Apply
+                  </button>
+                </div>
+              </div>
+
               <table class="zip-table">
                 <thead>
                   <tr>

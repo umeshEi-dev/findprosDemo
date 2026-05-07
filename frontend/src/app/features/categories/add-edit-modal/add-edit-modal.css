@@ -162,7 +162,7 @@
 input,
 textarea,
 select {
-  width: 100%;
+  /* width: 100%; */
   border: 1px solid #cbd3da;
   border-radius: 5px;
   background: #fff;
@@ -422,6 +422,89 @@ small,
   overflow-x: auto;
 }
 
+.bulk-fill-section {
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid #eadedb;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.bulk-fill-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.bulk-fill-header h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #17212b;
+}
+
+.bulk-apply-message {
+  margin: 0;
+  font-size: 12px;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.bulk-fill-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(120px, 1fr)) auto auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.bulk-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.bulk-field span {
+  font-size: 12px;
+  color: #52616b;
+  font-weight: 700;
+}
+
+.apply-bulk-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 4px;
+  background: #ef3b22;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.apply-bulk-btn:hover {
+  background: #d4301a;
+}
+
+.undo-bulk-btn {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #cbd3da;
+  border-radius: 4px;
+  background: #fff;
+  color: #17212b;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.undo-bulk-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .zip-table {
   width: 100%;
   border-collapse: collapse;
@@ -454,7 +537,7 @@ small,
 }
 
 .zip-checked {
-  background: #fff8f7;
+  /* background: #fff4ec; */
 }
 
 .zip-code-cell {
@@ -510,4 +593,10 @@ small,
 
 .save-loc-btn:hover {
   background: #d4301a;
+}
+
+@media (max-width: 900px) {
+  .bulk-fill-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
