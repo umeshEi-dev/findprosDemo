@@ -41,20 +41,17 @@
       <label class="field full">
         <span>Category Name</span>
         <input type="text" formControlName="name" placeholder="Category Name" />
-        <small *ngIf="categoryForm.controls.name.touched && categoryForm.controls.name.invalid"
-          >Category name is required.</small
-        >
+        <small *ngIf="categoryForm.controls.name.touched && categoryForm.controls.name.invalid">
+          Category name is required.
+        </small>
       </label>
 
       <label class="field full">
         <span>Category ID</span>
         <input type="text" formControlName="categoryId" placeholder="Category ID (e.g. CAT-01)" />
-        <small
-          *ngIf="
-            categoryForm.controls.categoryId.touched && categoryForm.controls.categoryId.invalid
-          "
-          >Category ID is required.</small
-        >
+        <small *ngIf="categoryForm.controls.categoryId.touched && categoryForm.controls.categoryId.invalid">
+          Category ID is required.
+        </small>
       </label>
 
       <label class="field full">
@@ -110,9 +107,9 @@
       <label class="field">
         <span>Task Name</span>
         <input type="text" formControlName="name" placeholder="Task Name" />
-        <small *ngIf="taskForm.controls.name.touched && taskForm.controls.name.invalid"
-          >Task name is required.</small
-        >
+        <small *ngIf="taskForm.controls.name.touched && taskForm.controls.name.invalid">
+          Task name is required.
+        </small>
       </label>
 
       <label class="field select-field">
@@ -122,10 +119,9 @@
             {{ category.name }}
           </option>
         </select>
-        <small
-          *ngIf="taskForm.controls.categoryIds.touched && taskForm.controls.categoryIds.invalid"
-          >Select at least one category.</small
-        >
+        <small *ngIf="taskForm.controls.categoryIds.touched && taskForm.controls.categoryIds.invalid">
+          Select at least one category.
+        </small>
       </label>
 
       <label class="field full">
@@ -150,8 +146,6 @@
           </label>
         </div>
       </div>
-     
-     <!-- PRICE BASED ON LOCATION SECTION -->
 
       <div class="location-section full">
         <h2 class="section-title">
@@ -161,183 +155,254 @@
             class="toggle-location-btn"
             (click)="showLocationPanel = !showLocationPanel"
           >
-            {{ showLocationPanel ? '▲ Hide' : '▼ Add Location' }}
+            {{ showLocationPanel ? 'Hide' : 'Add Location' }}
           </button>
         </h2>
 
         <div class="location-panel" *ngIf="showLocationPanel">
-          <!-- Search Box -->
-          <div class="location-search-wrap">
-            <input
-              type="search"
-              class="location-search-input"
-              placeholder="Search city, state..."
-              [value]="locationSearchText"
-              (input)="onLocationSearch($any($event.target).value)"
-              (keydown.enter)="$event.preventDefault()"
-            />
+          <div class="location-search-block">
+            <label class="field full">
+              <span>Enter a location to include</span>
+              <input
+                type="search"
+                class="location-search-input"
+                placeholder="Search city, state..."
+                [value]="locationSearchText"
+                (input)="onLocationSearch($any($event.target).value)"
+                (keydown.enter)="$event.preventDefault()"
+              />
+            </label>
             <span class="searching-text" *ngIf="locationSearching">Searching...</span>
 
-            <!-- Dropdown Results -->
             <ul class="location-dropdown" *ngIf="locationResults.length > 0">
               <li
                 *ngFor="let loc of locationResults"
                 class="location-dropdown-item"
                 (mousedown)="$event.preventDefault()"
-                (click)="selectLocation(loc); $event.stopPropagation()"
               >
-                 {{ loc.city }}, {{ loc.state }}, {{ loc.type }}
+                <span class="loc-main">{{ formatLocation(loc) }}</span>
                 <span class="loc-sub">{{ loc.location }}</span>
+                <button
+                  type="button"
+                  class="include-location-btn"
+                  [disabled]="isLocationIncluded(loc)"
+                  (click)="includeLocation(loc); $event.stopPropagation()"
+                >
+                  {{ isLocationIncluded(loc) ? 'Included' : 'Include' }}
+                </button>
               </li>
             </ul>
           </div>
 
-          <!-- Selected Location Badge -->
-          <div class="selected-location-badge" *ngIf="selectedLocation">
-             Selected: <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
-            <button type="button" class="clear-loc-btn" (click)="resetLocationState()">
-              ✕ Clear
-            </button>
+          <div class="bulk-fill-section">
+            <div class="bulk-fill-header">
+              <h3>Price Information</h3>
+              <p class="bulk-apply-message" *ngIf="bulkApplyMessage">{{ bulkApplyMessage }}</p>
+            </div>
+
+            <div class="bulk-fill-grid">
+              <label class="bulk-field">
+                <span>Leads</span>
+                <input
+                  type="number"
+                  class="price-input"
+                  [value]="bulkLeads"
+                  (input)="bulkLeads = +($any($event.target).value || 0)"
+                />
+              </label>
+              <label class="bulk-field">
+                <span>Warm Transfers</span>
+                <input
+                  type="number"
+                  class="price-input"
+                  [value]="bulkWarmTransfers"
+                  (input)="bulkWarmTransfers = +($any($event.target).value || 0)"
+                />
+              </label>
+              <label class="bulk-field">
+                <span>Inbounds</span>
+                <input
+                  type="number"
+                  class="price-input"
+                  [value]="bulkInbounds"
+                  (input)="bulkInbounds = +($any($event.target).value || 0)"
+                />
+              </label>
+              <button type="button" class="apply-bulk-btn" (click)="applyBulkPrices()">
+                Apply To Selected
+              </button>
+              <button
+                type="button"
+                class="undo-bulk-btn"
+                (click)="undoBulkPrices()"
+                [disabled]="!canUndoBulkPrices()"
+              >
+                Undo
+              </button>
+            </div>
           </div>
 
-          <!-- Zipcodes Table -->
-          <div class="location-accordion" *ngIf="selectedLocation">
-            <button
-              type="button"
-              class="location-accordion-header"
-              (click)="zipcodeAccordionOpen = !zipcodeAccordionOpen"
-              [attr.aria-expanded]="zipcodeAccordionOpen"
-            >
-              <span class="location-accordion-title">
-                <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
-                <small>{{ selectedLocation.type || 'City' }} pricing</small>
-              </span>
-              <span class="location-accordion-meta">
-                {{ zipcodesLoading ? 'Loading...' : (zipcodes.length || 0) + ' zipcodes' }}
-                <span class="accordion-chevron">{{ zipcodeAccordionOpen ? '^' : 'v' }}</span>
-              </span>
-            </button>
+          <section class="added-locations">
+            <h3>Added Location ({{ selectedLocations.length }})</h3>
 
-            <div class="location-accordion-body" *ngIf="zipcodeAccordionOpen">
-              <div class="zipcodes-wrap">
-            <div class="loading-text" *ngIf="zipcodesLoading">Loading zipcodes...</div>
-
-            <div *ngIf="!zipcodesLoading && zipcodes.length > 0">
-              <div class="bulk-fill-section">
-                <div class="bulk-fill-header">
-                  <h3>Bulk Price Fill</h3>
-                  <p class="bulk-apply-message" *ngIf="bulkApplyMessage">{{ bulkApplyMessage }}</p>
-                </div>
-
-                <div class="bulk-fill-grid">
-                  <label class="bulk-field">
-                    <span>Leads</span>
-                    <input
-                      type="number"
-                      class="price-input"
-                      [value]="bulkLeads"
-                      (input)="bulkLeads = +($any($event.target).value || 0)"
-                    />
-                  </label>
-                  <label class="bulk-field">
-                    <span>Warm Transfers</span>
-                    <input
-                      type="number"
-                      class="price-input"
-                      [value]="bulkWarmTransfers"
-                      (input)="bulkWarmTransfers = +($any($event.target).value || 0)"
-                    />
-                  </label>
-                  <label class="bulk-field">
-                    <span>Inbounds</span>
-                    <input
-                      type="number"
-                      class="price-input"
-                      [value]="bulkInbounds"
-                      (input)="bulkInbounds = +($any($event.target).value || 0)"
-                    />
-                  </label>
-                  <button type="button" class="apply-bulk-btn" (click)="applyBulkPrices()">
-                    Apply To All Zipcodes
-                  </button>
-                  <button
-                    type="button"
-                    class="undo-bulk-btn"
-                    (click)="undoBulkPrices()"
-                    [disabled]="!canUndoBulkPrices()"
-                  >
-                    Undo Bulk Apply
-                  </button>
-                </div>
-              </div>
-
-              <table class="zip-table">
+            <div class="locations-table-wrap" *ngIf="selectedLocations.length; else noSelectedLocations">
+              <table class="locations-table">
                 <thead>
                   <tr>
-                    <th>✓</th>
-                    <th>Zipcode</th>
-                    <th>Leads ($)</th>
-                    <th>Warm Transfers ($)</th>
-                    <th>Inbounds ($)</th>
+                    <th class="check-col">
+                      <span class="visually-hidden">Select</span>
+                    </th>
+                    <th>Location</th>
+                    <th>Leads</th>
+                    <th>Warm Transfers</th>
+                    <th>Inbounds</th>
+                    <th>ZIP/Postal Codes</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    *ngFor="let zip of zipcodes; let i = index"
-                    [class.zip-checked]="zip.isChecked"
-                  >
-                    <td>
-                      <input
-                        type="checkbox"
-                        [checked]="zip.isChecked"
-                        (change)="toggleZipCheck(i)"
-                      />
-                    </td>
-                    <td class="zip-code-cell">{{ zip.zipcode }}</td>
-                    <td>
-                      <input
-                        type="number"
-                        class="price-input"
-                        [value]="zip.prices.leads"
-                        (input)="updateZipPrice(i, 'leads', $any($event.target).value)"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        class="price-input"
-                        [value]="zip.prices.warm_transfers"
-                        (input)="updateZipPrice(i, 'warm_transfers', $any($event.target).value)"
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="number"
-                        class="price-input"
-                        [value]="zip.prices.inbounds"
-                        (input)="updateZipPrice(i, 'inbounds', $any($event.target).value)"
-                      />
-                    </td>
-                  </tr>
+                  <ng-container *ngFor="let location of selectedLocations; trackBy: trackLocation">
+                    <tr [class.location-checked]="location.isChecked">
+                      <td>
+                        <input
+                          type="checkbox"
+                          [checked]="location.isChecked"
+                          (change)="toggleLocationCheck(location)"
+                        />
+                      </td>
+                      <td class="location-name-cell">{{ formatLocation(location.location) }}</td>
+                      <td>
+                        <input
+                          type="number"
+                          class="price-input"
+                          [value]="location.prices.leads"
+                          (input)="updateLocationPrice(location, 'leads', $any($event.target).value)"
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="price-input"
+                          [value]="location.prices.warm_transfers"
+                          (input)="updateLocationPrice(location, 'warm_transfers', $any($event.target).value)"
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          class="price-input"
+                          [value]="location.prices.inbounds"
+                          (input)="updateLocationPrice(location, 'inbounds', $any($event.target).value)"
+                        />
+                      </td>
+                      <td class="zip-summary-cell">
+                        {{ location.zipcodesLoading ? 'Loading...' : (location.zipcodes.length || 0) + ' codes' }}
+                      </td>
+                      <td>
+                        <div class="location-actions">
+                          <button
+                            type="button"
+                            class="icon-btn"
+                            aria-label="Toggle ZIP/postal codes"
+                            (click)="location.accordionOpen = !location.accordionOpen"
+                          >
+                            {{ location.accordionOpen ? '^' : 'v' }}
+                          </button>
+                          <button
+                            type="button"
+                            class="icon-btn danger"
+                            aria-label="Remove location"
+                            (click)="removeLocation(location.key)"
+                          >
+                            x
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+
+                    <tr class="zip-detail-row" *ngIf="location.accordionOpen">
+                      <td colspan="7">
+                        <div class="zipcodes-wrap">
+                          <div class="loading-text" *ngIf="location.zipcodesLoading">Loading zipcodes...</div>
+
+                          <table class="zip-table" *ngIf="!location.zipcodesLoading && location.zipcodes.length > 0">
+                            <thead>
+                              <tr>
+                                <th class="check-col">Select</th>
+                                <th>Zipcode</th>
+                                <th>Leads</th>
+                                <th>Warm Transfers</th>
+                                <th>Inbounds</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr
+                                *ngFor="let zip of location.zipcodes; let i = index"
+                                [class.zip-checked]="zip.isChecked"
+                              >
+                                <td>
+                                  <input
+                                    type="checkbox"
+                                    [checked]="zip.isChecked"
+                                    (change)="toggleZipCheck(location, i)"
+                                  />
+                                </td>
+                                <td class="zip-code-cell">{{ zip.zipcode }}</td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    class="price-input"
+                                    [value]="zip.prices.leads"
+                                    (input)="updateZipPrice(location, i, 'leads', $any($event.target).value)"
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    class="price-input"
+                                    [value]="zip.prices.warm_transfers"
+                                    (input)="updateZipPrice(location, i, 'warm_transfers', $any($event.target).value)"
+                                  />
+                                </td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    class="price-input"
+                                    [value]="zip.prices.inbounds"
+                                    (input)="updateZipPrice(location, i, 'inbounds', $any($event.target).value)"
+                                  />
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+
+                          <p class="no-zip-msg" *ngIf="!location.zipcodesLoading && location.zipcodes.length === 0">
+                            No zipcodes found for this location.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-container>
                 </tbody>
               </table>
-
-              <!-- Save Location Pricing Button -->
-              <div class="loc-save-row">
-                <button type="button" class="save-loc-btn" (click)="saveLocationPricing()">
-                  Save Location Pricing
-                </button>
-              </div>
             </div>
 
-            <p class="no-zip-msg" *ngIf="!zipcodesLoading && zipcodes.length === 0">
-              No zipcodes found for this location.
-            </p>
-              </div>
-            </div>
+            <ng-template #noSelectedLocations>
+              <p class="no-zip-msg">Search for a location and choose Include to add it here.</p>
+            </ng-template>
+          </section>
+
+          <div class="loc-save-row">
+            <button type="button" class="save-loc-btn" (click)="saveLocationPricing()">
+              Save
+            </button>
+            <button type="button" class="cancel-loc-btn" (click)="showLocationPanel = false">
+              Cancel
+            </button>
           </div>
         </div>
       </div>
+
       <div class="actions full">
         <button type="submit" class="primary-action" [disabled]="saving">
           {{ saving ? 'Saving...' : 'Save Task' }}

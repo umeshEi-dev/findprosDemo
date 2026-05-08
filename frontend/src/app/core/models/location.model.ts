@@ -42,4 +42,10 @@ export interface LocationPricingPayload {
     inbounds: number;
   };
   service_area_zipcodes: ZipcodePricing[];
+  isChecked?: boolean;
+}
+
+export interface MultiLocationPricingPayload {
+  category_id: string;
+  locations: LocationPricingPayload[];
 }

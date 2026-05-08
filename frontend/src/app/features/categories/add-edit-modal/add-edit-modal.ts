@@ -3,19 +3,40 @@ import { Component, EventEmitter, Input, Output, inject, OnChanges, SimpleChange
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { catchError, debounceTime, distinctUntilChanged, finalize, map, of, Subject, switchMap, timeout } from 'rxjs';
 import { Category } from '../../../core/models/category.model';
-import { CategoryApiService } from '../../../core/services/category-api.service';
+import { Location, LocationPricingPayload, ZipcodePricing, ZipcodeResult } from '../../../core/models/location.model';
 import { Task } from '../../../core/models/task.model';
-import { Location, ZipcodeResult, ZipcodePricing } from '../../../core/models/location.model';
+import { CategoryApiService } from '../../../core/services/category-api.service';
 
 type AddMode = 'category' | 'task';
 type ZipPriceField = 'leads' | 'warm_transfers' | 'inbounds';
-type BulkSnapshotItem = { index: number; prices: Record<ZipPriceField, number> };
+type PriceMap = Record<ZipPriceField, number>;
+type BulkSnapshotItem = {
+  locationKey: string;
+  locationPrices: PriceMap;
+  zipcodes: { index: number; prices: PriceMap }[];
+};
+
 interface SavedTaskLocation {
+  _id?: string;
   location?: string;
   city?: string;
   state?: string;
+  country?: string | null;
   type?: string;
+  prices?: Partial<PriceMap>;
+  isChecked?: boolean;
   service_area_zipcodes?: ZipcodePricing[];
+}
+
+interface SelectedLocationPricing {
+  key: string;
+  persistedId?: string;
+  location: Location;
+  isChecked: boolean;
+  accordionOpen: boolean;
+  zipcodes: ZipcodePricing[];
+  zipcodesLoading: boolean;
+  prices: PriceMap;
 }
 
 @Component({
@@ -38,15 +59,11 @@ export class AddEditModalComponent implements OnChanges {
   saving = false;
   errorMessage = '';
 
-  // ─── Location Search State ───────────────────────────
   locationSearchText = '';
   locationResults: Location[] = [];
   locationSearching = false;
-  selectedLocation: Location | null = null;
+  selectedLocations: SelectedLocationPricing[] = [];
 
-  // ─── Zipcode State ───────────────────────────────────
-  zipcodes: ZipcodePricing[] = [];
-  zipcodesLoading = false;
   bulkLeads = 0;
   bulkWarmTransfers = 0;
   bulkInbounds = 0;
@@ -54,11 +71,8 @@ export class AddEditModalComponent implements OnChanges {
   private bulkMessageTimer: ReturnType<typeof setTimeout> | null = null;
   private lastBulkSnapshot: BulkSnapshotItem[] = [];
 
-  // ─── Location Panel toggle ───────────────────────────
   showLocationPanel = false;
-  zipcodeAccordionOpen = false;
 
-  // Search debounce
   private readonly searchSubject = new Subject<string>();
 
   readonly categoryForm = this.fb.group({
@@ -77,7 +91,6 @@ export class AddEditModalComponent implements OnChanges {
   });
 
   constructor() {
-    // Debounce search — 400ms baad call hoga
     this.searchSubject.pipe(
       debounceTime(400),
       distinctUntilChanged(),
@@ -87,6 +100,7 @@ export class AddEditModalComponent implements OnChanges {
           this.locationSearching = false;
           return of([]);
         }
+
         this.locationSearching = true;
         return this.api.getLocation(search).pipe(
           catchError(() => {
@@ -118,6 +132,7 @@ export class AddEditModalComponent implements OnChanges {
             priceCall: task.price?.call || '',
             priceAppointment: task.price?.appointment || ''
           });
+
           const primaryCategoryId = categoryIds[0];
           if (primaryCategoryId) {
             this.loadStoredLocationPricing(primaryCategoryId);
@@ -139,199 +154,126 @@ export class AddEditModalComponent implements OnChanges {
     this.errorMessage = '';
   }
 
-  // ─── Location Search Methods ──────────────────────────
-
   onLocationSearch(value: string): void {
     this.locationSearchText = value;
     this.searchSubject.next(value);
   }
 
-  selectLocation(loc: Location): void {
-    const selectedLocation = this.normalizeLocation(loc);
+  includeLocation(loc: Location): void {
+    const location = this.normalizeLocation(loc);
+    const key = this.locationKey(location);
+    const existingLocation = this.selectedLocations.find(selected => selected.key === key);
 
-    this.selectedLocation = selectedLocation;
-    this.locationResults = [];   // dropdown band karo
-    this.locationSearchText = `${selectedLocation.city}, ${selectedLocation.state}`;
-    this.zipcodeAccordionOpen = true;
+    if (existingLocation) {
+      existingLocation.accordionOpen = true;
+      this.locationResults = [];
+      return;
+    }
+
+    const selectedLocation = this.createSelectedLocation(location, {
+      isChecked: true,
+      accordionOpen: true,
+      prices: this.currentBulkPrices()
+    });
+
+    this.selectedLocations = [selectedLocation, ...this.selectedLocations];
+    this.locationResults = [];
     this.loadZipcodes(selectedLocation);
   }
 
-  loadZipcodes(loc: Location): void {
-    const stateCode = loc.stateShort?.trim();
-    const city = loc.city?.trim();
-
-    this.zipcodesLoading = true;
-    this.zipcodes = [];
-    this.bulkApplyMessage = '';
-    this.lastBulkSnapshot = [];
-
-    if (!city) {
-      this.zipcodesLoading = false;
-      this.errorMessage = 'Selected location is missing a city.';
-      return;
-    }
-
-    if (!stateCode) {
-      this.zipcodesLoading = false;
-      this.errorMessage = 'Selected location is missing a state code.';
-      return;
-    }
-
-    this.errorMessage = '';
-
-    this.api.getZipcode(city, stateCode).pipe(
-      timeout(15000),
-      map((results: ZipcodeResult[]) => {
-        if (!Array.isArray(results)) {
-          throw new Error('Invalid zipcode response.');
-        }
-
-        return results.map((z: ZipcodeResult) => this.toZipcodePricing(z));
-      }),
-      catchError(() => {
-        this.errorMessage = 'Unable to load zipcodes for this location.';
-        return of([]);
-      }),
-      finalize(() => this.zipcodesLoading = false)
-    ).subscribe({
-      next: (zipcodes: ZipcodePricing[]) => {
-        this.zipcodes = zipcodes;
-        if (zipcodes.length) {
-          this.errorMessage = '';
-        }
-      }
-    });
+  removeLocation(locationKey: string): void {
+    this.selectedLocations = this.selectedLocations.filter(location => location.key !== locationKey);
+    this.lastBulkSnapshot = this.lastBulkSnapshot.filter(item => item.locationKey !== locationKey);
   }
 
-  updateZipPrice(index: number, field: 'leads' | 'warm_transfers' | 'inbounds', value: string): void {
-    this.zipcodes[index].prices[field] = Number(value) || 0;
+  toggleLocationCheck(location: SelectedLocationPricing): void {
+    location.isChecked = !location.isChecked;
   }
 
-  toggleZipCheck(index: number): void {
-    this.zipcodes[index].isChecked = !this.zipcodes[index].isChecked;
+  toggleZipCheck(location: SelectedLocationPricing, index: number): void {
+    const zipcode = location.zipcodes[index];
+    if (!zipcode) return;
+    zipcode.isChecked = !zipcode.isChecked;
+  }
+
+  updateLocationPrice(location: SelectedLocationPricing, field: ZipPriceField, value: string): void {
+    location.prices[field] = Number(value) || 0;
+  }
+
+  updateZipPrice(location: SelectedLocationPricing, index: number, field: ZipPriceField, value: string): void {
+    const zipcode = location.zipcodes[index];
+    if (!zipcode) return;
+    zipcode.prices[field] = Number(value) || 0;
   }
 
   applyBulkPrices(): void {
-    if (!this.zipcodes.length) return;
+    if (!this.selectedLocations.length) return;
 
-    const hasCheckedRows = this.zipcodes.some(zip => zip.isChecked);
-    let updatedCount = 0;
-    const snapshot: BulkSnapshotItem[] = [];
+    const hasCheckedRows = this.selectedLocations.some(location => location.isChecked);
+    const targetLocations = this.selectedLocations.filter(location => !hasCheckedRows || location.isChecked);
 
-    this.zipcodes.forEach((zip, index) => {
-      if (hasCheckedRows && !zip.isChecked) return;
-
-      snapshot.push({
+    const prices = this.currentBulkPrices();
+    const snapshot: BulkSnapshotItem[] = targetLocations.map(location => ({
+      locationKey: location.key,
+      locationPrices: { ...location.prices },
+      zipcodes: location.zipcodes.map((zip, index) => ({
         index,
-        prices: {
-          leads: zip.prices.leads,
-          warm_transfers: zip.prices.warm_transfers,
-          inbounds: zip.prices.inbounds
-        }
-      });
+        prices: { ...zip.prices }
+      }))
+    }));
 
-      zip.prices.leads = Number(this.bulkLeads) || 0;
-      zip.prices.warm_transfers = Number(this.bulkWarmTransfers) || 0;
-      zip.prices.inbounds = Number(this.bulkInbounds) || 0;
-      updatedCount += 1;
+    targetLocations.forEach(location => {
+      location.prices = { ...prices };
+      location.zipcodes.forEach(zip => {
+        zip.prices = { ...prices };
+      });
     });
 
     this.lastBulkSnapshot = snapshot;
-    this.bulkApplyMessage = `Applied to ${updatedCount} zipcodes`;
-
-    if (this.bulkMessageTimer) {
-      clearTimeout(this.bulkMessageTimer);
-    }
-
-    this.bulkMessageTimer = setTimeout(() => {
-      this.bulkApplyMessage = '';
-      this.bulkMessageTimer = null;
-    }, 2200);
+    this.setBulkMessage(`Applied to ${targetLocations.length} location${targetLocations.length === 1 ? '' : 's'}`);
   }
 
   undoBulkPrices(): void {
     if (!this.lastBulkSnapshot.length) return;
 
-    this.lastBulkSnapshot.forEach(({ index, prices }) => {
-      const row = this.zipcodes[index];
-      if (!row) return;
-      row.prices.leads = prices.leads;
-      row.prices.warm_transfers = prices.warm_transfers;
-      row.prices.inbounds = prices.inbounds;
+    this.lastBulkSnapshot.forEach(snapshot => {
+      const location = this.selectedLocations.find(selected => selected.key === snapshot.locationKey);
+      if (!location) return;
+
+      location.prices = { ...snapshot.locationPrices };
+      snapshot.zipcodes.forEach(({ index, prices }) => {
+        const row = location.zipcodes[index];
+        if (!row) return;
+        row.prices = { ...prices };
+      });
     });
 
     const restoredCount = this.lastBulkSnapshot.length;
     this.lastBulkSnapshot = [];
-    this.bulkApplyMessage = `Restored ${restoredCount} zipcodes`;
-
-    if (this.bulkMessageTimer) {
-      clearTimeout(this.bulkMessageTimer);
-    }
-
-    this.bulkMessageTimer = setTimeout(() => {
-      this.bulkApplyMessage = '';
-      this.bulkMessageTimer = null;
-    }, 2200);
+    this.setBulkMessage(`Restored ${restoredCount} location${restoredCount === 1 ? '' : 's'}`);
   }
 
   canUndoBulkPrices(): boolean {
     return this.lastBulkSnapshot.length > 0;
   }
 
-  private loadStoredLocationPricing(categoryId: string): void {
-    this.zipcodesLoading = true;
-    this.errorMessage = '';
-    this.bulkApplyMessage = '';
-    this.lastBulkSnapshot = [];
+  isLocationIncluded(loc: Location): boolean {
+    return this.selectedLocations.some(selected => selected.key === this.locationKey(this.normalizeLocation(loc)));
+  }
 
-    this.api.getLocationPricing(categoryId).pipe(
-      finalize(() => this.zipcodesLoading = false)
-    ).subscribe({
-      next: (savedLocations: SavedTaskLocation[]) => {
-        const latestLocation = savedLocations?.[0];
+  formatLocation(location: Location): string {
+    return [location.city, location.state, location.type].filter(Boolean).join(', ');
+  }
 
-        if (!latestLocation) {
-          this.resetLocationState();
-          this.showLocationPanel = true;
-          return;
-        }
-
-        this.selectedLocation = {
-          _id: '',
-          location: latestLocation.location || '',
-          city: latestLocation.city || '',
-          state: latestLocation.state || '',
-          stateShort: latestLocation.state || '',
-          type: latestLocation.type || 'city'
-        };
-
-        this.locationSearchText = [this.selectedLocation.city, this.selectedLocation.state]
-          .filter(Boolean)
-          .join(', ');
-        this.zipcodes = (latestLocation.service_area_zipcodes || []).map((zip) => ({
-          zipcode: zip.zipcode,
-          isChecked: !!zip.isChecked,
-          prices: {
-            leads: Number(zip.prices?.leads) || 0,
-            warm_transfers: Number(zip.prices?.warm_transfers) || 0,
-            inbounds: Number(zip.prices?.inbounds) || 0
-          }
-        }));
-        this.showLocationPanel = true;
-        this.zipcodeAccordionOpen = true;
-      },
-      error: () => {
-        this.resetLocationState();
-        this.showLocationPanel = true;
-      }
-    });
+  trackLocation(_index: number, location: SelectedLocationPricing): string {
+    return location.key;
   }
 
   resetLocationState(): void {
     this.locationSearchText = '';
     this.locationResults = [];
-    this.selectedLocation = null;
-    this.zipcodes = [];
+    this.locationSearching = false;
+    this.selectedLocations = [];
     this.bulkLeads = 0;
     this.bulkWarmTransfers = 0;
     this.bulkInbounds = 0;
@@ -342,12 +284,10 @@ export class AddEditModalComponent implements OnChanges {
       this.bulkMessageTimer = null;
     }
     this.showLocationPanel = false;
-    this.zipcodesLoading = false;
-    this.zipcodeAccordionOpen = false;
   }
 
   saveLocationPricing(): void {
-    if (!this.selectedLocation) return;
+    if (!this.selectedLocations.length) return;
 
     const categoryIds = this.taskForm.getRawValue().categoryIds;
     if (!categoryIds?.length) {
@@ -355,17 +295,9 @@ export class AddEditModalComponent implements OnChanges {
       return;
     }
 
-    const loc = this.selectedLocation;
-
     const payload = {
       category_id: categoryIds[0],
-      location: `${loc.city}, ${loc.state}, ${loc.type}`,
-      city: loc.city,
-      state: loc.state,
-      country: null,
-      type: loc.type?.toLowerCase() || 'city',
-      prices: { leads: 0, warm_transfers: 0, inbounds: 0 },
-      service_area_zipcodes: this.zipcodes
+      locations: this.selectedLocations.map(location => this.toLocationPricingPayload(categoryIds[0], location))
     };
 
     this.api.saveLocationPricing(payload).subscribe({
@@ -373,14 +305,13 @@ export class AddEditModalComponent implements OnChanges {
         this.errorMessage = '';
         alert('Location pricing saved!');
         this.resetLocationState();
+        this.showLocationPanel = true;
       },
       error: () => {
         this.errorMessage = 'Failed to save location pricing.';
       }
     });
   }
-
-  // ─── Category / Task Save ─────────────────────────────
 
   relatedTasksForEditingCategory(): Task[] {
     if (this.editItem?.kind !== 'category') return [];
@@ -445,6 +376,167 @@ export class AddEditModalComponent implements OnChanges {
     });
   }
 
+  private loadZipcodes(location: SelectedLocationPricing): void {
+    const stateCode = location.location.stateShort?.trim();
+    const city = location.location.city?.trim();
+
+    location.zipcodesLoading = true;
+    location.zipcodes = [];
+
+    if (!city) {
+      location.zipcodesLoading = false;
+      this.errorMessage = 'Selected location is missing a city.';
+      return;
+    }
+
+    if (!stateCode) {
+      location.zipcodesLoading = false;
+      this.errorMessage = 'Selected location is missing a state code.';
+      return;
+    }
+
+    this.errorMessage = '';
+
+    this.api.getZipcode(city, stateCode).pipe(
+      timeout(15000),
+      map((results: ZipcodeResult[]) => {
+        if (!Array.isArray(results)) {
+          throw new Error('Invalid zipcode response.');
+        }
+
+        return results.map((z: ZipcodeResult) => this.toZipcodePricing(z, location.prices));
+      }),
+      catchError(() => {
+        this.errorMessage = `Unable to load zipcodes for ${this.formatLocation(location.location)}.`;
+        return of([]);
+      }),
+      finalize(() => location.zipcodesLoading = false)
+    ).subscribe({
+      next: (zipcodes: ZipcodePricing[]) => {
+        location.zipcodes = zipcodes;
+        if (zipcodes.length) {
+          this.errorMessage = '';
+        }
+      }
+    });
+  }
+
+  private loadStoredLocationPricing(categoryId: string): void {
+    this.errorMessage = '';
+    this.bulkApplyMessage = '';
+    this.lastBulkSnapshot = [];
+    this.selectedLocations = [];
+
+    this.api.getLocationPricing(categoryId).subscribe({
+      next: (savedLocations: SavedTaskLocation[]) => {
+        if (!savedLocations?.length) {
+          this.resetLocationState();
+          this.showLocationPanel = true;
+          return;
+        }
+
+        this.selectedLocations = savedLocations.map((savedLocation, index) => {
+          const prices = this.toPrices(savedLocation.prices);
+          const location = this.normalizeLocation({
+            _id: savedLocation._id || '',
+            location: savedLocation.location || '',
+            city: savedLocation.city || '',
+            state: savedLocation.state || '',
+            stateShort: savedLocation.state || '',
+            type: savedLocation.type || 'City'
+          });
+
+          return this.createSelectedLocation(location, {
+            persistedId: savedLocation._id,
+            isChecked: !!savedLocation.isChecked,
+            accordionOpen: index === 0,
+            prices,
+            zipcodes: (savedLocation.service_area_zipcodes || []).map(zip => this.toStoredZipcodePricing(zip, prices))
+          });
+        });
+
+        this.showLocationPanel = true;
+      },
+      error: () => {
+        this.resetLocationState();
+        this.showLocationPanel = true;
+      }
+    });
+  }
+
+  private createSelectedLocation(
+    location: Location,
+    options: Partial<Omit<SelectedLocationPricing, 'key' | 'location'>> = {}
+  ): SelectedLocationPricing {
+    return {
+      key: this.locationKey(location),
+      location,
+      persistedId: options.persistedId,
+      isChecked: options.isChecked ?? false,
+      accordionOpen: options.accordionOpen ?? false,
+      zipcodes: options.zipcodes || [],
+      zipcodesLoading: options.zipcodesLoading ?? false,
+      prices: options.prices || this.emptyPrices()
+    };
+  }
+
+  private toLocationPricingPayload(categoryId: string, selectedLocation: SelectedLocationPricing): LocationPricingPayload {
+    const loc = selectedLocation.location;
+
+    return {
+      category_id: categoryId,
+      location: this.formatLocation(loc),
+      city: loc.city,
+      state: loc.stateShort || loc.state,
+      country: null,
+      type: loc.type?.toLowerCase() || 'city',
+      isChecked: selectedLocation.isChecked,
+      prices: selectedLocation.prices,
+      service_area_zipcodes: selectedLocation.zipcodes
+    };
+  }
+
+  private currentBulkPrices(): PriceMap {
+    return {
+      leads: Number(this.bulkLeads) || 0,
+      warm_transfers: Number(this.bulkWarmTransfers) || 0,
+      inbounds: Number(this.bulkInbounds) || 0
+    };
+  }
+
+  private emptyPrices(): PriceMap {
+    return { leads: 0, warm_transfers: 0, inbounds: 0 };
+  }
+
+  private toPrices(prices?: Partial<PriceMap>): PriceMap {
+    return {
+      leads: Number(prices?.leads) || 0,
+      warm_transfers: Number(prices?.warm_transfers) || 0,
+      inbounds: Number(prices?.inbounds) || 0
+    };
+  }
+
+  private toStoredZipcodePricing(zip: ZipcodePricing, fallbackPrices: PriceMap): ZipcodePricing {
+    return {
+      zipcode: zip.zipcode,
+      isChecked: !!zip.isChecked,
+      prices: this.toPrices(zip.prices || fallbackPrices)
+    };
+  }
+
+  private setBulkMessage(message: string): void {
+    this.bulkApplyMessage = message;
+
+    if (this.bulkMessageTimer) {
+      clearTimeout(this.bulkMessageTimer);
+    }
+
+    this.bulkMessageTimer = setTimeout(() => {
+      this.bulkApplyMessage = '';
+      this.bulkMessageTimer = null;
+    }, 2200);
+  }
+
   private extractError(error: unknown, fallback: string): string {
     if (typeof error === 'object' && error !== null && 'error' in error) {
       const httpError = error as { error?: { message?: string } };
@@ -474,11 +566,19 @@ export class AddEditModalComponent implements OnChanges {
     };
   }
 
-  private toZipcodePricing(zipcode: ZipcodeResult): ZipcodePricing {
+  private locationKey(loc: Location): string {
+    return [
+      loc.city?.trim().toLowerCase(),
+      (loc.stateShort || loc.state)?.trim().toLowerCase(),
+      loc.type?.trim().toLowerCase()
+    ].filter(Boolean).join('|');
+  }
+
+  private toZipcodePricing(zipcode: ZipcodeResult, prices: PriceMap): ZipcodePricing {
     return {
       zipcode: zipcode.zip,
       isChecked: false,
-      prices: { leads: 0, warm_transfers: 0, inbounds: 0 }
+      prices: { ...prices }
     };
   }
 }

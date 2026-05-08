@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Category, CreateCategoryPayload } from '../models/category.model';
 import { CategoryFilters } from '../models/filter.model';
-import { Location, ZipcodeResult } from '../models/location.model';
+import { Location, LocationPricingPayload, MultiLocationPricingPayload, ZipcodeResult } from '../models/location.model';
 import { CreateTaskPayload, Task } from '../models/task.model';
 
 @Injectable({
@@ -56,7 +56,7 @@ export class CategoryApiService {
     return this.http.get<ZipcodeResult[]>(`${this.apiUrl}/get-zipcode`, { params });
   }
 
-  saveLocationPricing(payload: any): Observable<any> {
+  saveLocationPricing(payload: LocationPricingPayload | MultiLocationPricingPayload): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/task-location`, payload);
   }
 

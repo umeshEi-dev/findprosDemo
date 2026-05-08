@@ -1,62 +1,65 @@
 import mongoose from 'mongoose';
-import { asyncHandler } from '../utils/asyncHandler.js';
 import { TaskLocation } from '../models/task-location.model.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-// Save karo — user ne prices fill karke submit kiya
-export const createTaskLocation = asyncHandler(async (req, res) => {
-  const {
-    category_id,
-    location,
-    city,
-    state,
-    country,
-    zipcode,
-    type,
-    prices,
-    service_area_zipcodes
-  } = req.body;
+const normalizePrices = (prices = {}) => ({
+  leads: prices?.leads || 0,
+  warm_transfers: prices?.warm_transfers || 0,
+  inbounds: prices?.inbounds || 0
+});
 
-  // Validate
-  if (!category_id || !mongoose.Types.ObjectId.isValid(category_id)) {
+const normalizeZipcodes = (zipcodes = []) => zipcodes.map((z) => ({
+  zipcode: z.zipcode,
+  isChecked: z.isChecked || false,
+  prices: normalizePrices(z.prices)
+}));
+
+const normalizeTaskLocation = (payload, fallbackCategoryId) => {
+  const categoryId = payload.category_id || fallbackCategoryId;
+
+  if (!categoryId || !mongoose.Types.ObjectId.isValid(categoryId)) {
     const error = new Error('Valid category_id is required');
     error.statusCode = 400;
     throw error;
   }
 
-  if (!location) {
+  if (!payload.location) {
     const error = new Error('Location is required');
     error.statusCode = 400;
     throw error;
   }
 
-  const taskLocation = await TaskLocation.create({
-    category_id,
-    location,
-    city,
-    state,
-    country: country || null,
-    zipcode: zipcode || '',
-    type,
-    prices: {
-      leads:          prices?.leads          || 0,
-      warm_transfers: prices?.warm_transfers || 0,
-      inbounds:       prices?.inbounds       || 0
-    },
-    service_area_zipcodes: (service_area_zipcodes || []).map(z => ({
-      zipcode:   z.zipcode,
-      isChecked: z.isChecked || false,
-      prices: {
-        leads:          z.prices?.leads          || 0,
-        warm_transfers: z.prices?.warm_transfers || 0,
-        inbounds:       z.prices?.inbounds       || 0
-      }
-    }))
-  });
+  return {
+    category_id: categoryId,
+    location: payload.location,
+    city: payload.city,
+    state: payload.state,
+    country: payload.country || null,
+    zipcode: payload.zipcode || '',
+    type: payload.type,
+    isChecked: payload.isChecked || false,
+    prices: normalizePrices(payload.prices),
+    service_area_zipcodes: normalizeZipcodes(payload.service_area_zipcodes || [])
+  };
+};
+
+export const createTaskLocation = asyncHandler(async (req, res) => {
+  const { category_id, locations } = req.body;
+
+  if (Array.isArray(locations) && locations.length > 0) {
+    const taskLocations = await TaskLocation.insertMany(
+      locations.map((location) => normalizeTaskLocation(location, category_id))
+    );
+
+    res.status(201).json(taskLocations);
+    return;
+  }
+
+  const taskLocation = await TaskLocation.create(normalizeTaskLocation(req.body));
 
   res.status(201).json(taskLocation);
 });
 
-// Ek category ke saare task-locations lao
 export const getTaskLocationsByCategory = asyncHandler(async (req, res) => {
   const { category_id } = req.query;
 
