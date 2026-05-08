@@ -3,7 +3,10 @@ import mongoose from 'mongoose';
 const zipcodeSchema = new mongoose.Schema(
   {
     zip: { type: String, trim: true },
+    type: { type: String, trim: true },
     primary_city: { type: String, trim: true },
+    acceptable_cities: { type: String, trim: true },
+    unacceptable_cities: { type: String, trim: true },
     state: { type: String, trim: true, uppercase: true },
     county: { type: String, trim: true },
     country: { type: String, trim: true },

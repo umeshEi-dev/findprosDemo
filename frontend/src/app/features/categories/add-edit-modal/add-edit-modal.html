@@ -150,9 +150,9 @@
           </label>
         </div>
       </div>
-      <!-- ═══════════════════════════════════════════
-     PRICE BASED ON LOCATION SECTION
-════════════════════════════════════════════ -->
+     
+     <!-- PRICE BASED ON LOCATION SECTION -->
+
       <div class="location-section full">
         <h2 class="section-title">
           Price based on Location
@@ -169,11 +169,12 @@
           <!-- Search Box -->
           <div class="location-search-wrap">
             <input
-              type="text"
+              type="search"
               class="location-search-input"
               placeholder="Search city, state..."
               [value]="locationSearchText"
               (input)="onLocationSearch($any($event.target).value)"
+              (keydown.enter)="$event.preventDefault()"
             />
             <span class="searching-text" *ngIf="locationSearching">Searching...</span>
 
@@ -182,9 +183,10 @@
               <li
                 *ngFor="let loc of locationResults"
                 class="location-dropdown-item"
-                (click)="selectLocation(loc)"
+                (mousedown)="$event.preventDefault()"
+                (click)="selectLocation(loc); $event.stopPropagation()"
               >
-                📍 {{ loc.city }}, {{ loc.state }}, {{ loc.type }}
+                 {{ loc.city }}, {{ loc.state }}, {{ loc.type }}
                 <span class="loc-sub">{{ loc.location }}</span>
               </li>
             </ul>
@@ -192,14 +194,32 @@
 
           <!-- Selected Location Badge -->
           <div class="selected-location-badge" *ngIf="selectedLocation">
-            ✅ Selected: <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
+             Selected: <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
             <button type="button" class="clear-loc-btn" (click)="resetLocationState()">
               ✕ Clear
             </button>
           </div>
 
           <!-- Zipcodes Table -->
-          <div class="zipcodes-wrap" *ngIf="selectedLocation">
+          <div class="location-accordion" *ngIf="selectedLocation">
+            <button
+              type="button"
+              class="location-accordion-header"
+              (click)="zipcodeAccordionOpen = !zipcodeAccordionOpen"
+              [attr.aria-expanded]="zipcodeAccordionOpen"
+            >
+              <span class="location-accordion-title">
+                <strong>{{ selectedLocation.city }}, {{ selectedLocation.state }}</strong>
+                <small>{{ selectedLocation.type || 'City' }} pricing</small>
+              </span>
+              <span class="location-accordion-meta">
+                {{ zipcodesLoading ? 'Loading...' : (zipcodes.length || 0) + ' zipcodes' }}
+                <span class="accordion-chevron">{{ zipcodeAccordionOpen ? '^' : 'v' }}</span>
+              </span>
+            </button>
+
+            <div class="location-accordion-body" *ngIf="zipcodeAccordionOpen">
+              <div class="zipcodes-wrap">
             <div class="loading-text" *ngIf="zipcodesLoading">Loading zipcodes...</div>
 
             <div *ngIf="!zipcodesLoading && zipcodes.length > 0">
@@ -313,6 +333,8 @@
             <p class="no-zip-msg" *ngIf="!zipcodesLoading && zipcodes.length === 0">
               No zipcodes found for this location.
             </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

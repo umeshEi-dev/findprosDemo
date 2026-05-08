@@ -1,7 +1,7 @@
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { Zipcode } from '../models/zipcode.model.js';
 
-const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const getZipCodes = asyncHandler(async (req, res) => {
   const { city, state } = req.query;
@@ -13,17 +13,28 @@ export const getZipCodes = asyncHandler(async (req, res) => {
   }
 
   const filter = {};
+  let hasCityFilter = false;
 
-//   if (city) {
-//     const cityValue = String(city).trim();
-//     if (cityValue) {
-//       filter.primary_city = cityValue;
-//       // {
-//       //   $regex: `^${escapeRegex(cityValue)}$`,
-//       //   $options: 'i'
-//       // };
-//     }
-//   }
+  if (city) {
+    const cityValue = String(city).trim();
+    if (cityValue) {
+      filter.$or = [
+        {
+          primary_city: {
+            $regex: `^${escapeRegex(cityValue)}$`,
+            $options: 'i'
+          }
+        },
+        {
+          acceptable_cities: {
+            $regex: `(^|,\\s*)${escapeRegex(cityValue)}(\\s*,|$)`,
+            $options: 'i'
+          }
+        }
+      ];
+      hasCityFilter = true;
+    }
+  }
 
   if (state) {
     const stateValue = String(state).trim().toUpperCase();
@@ -31,20 +42,22 @@ export const getZipCodes = asyncHandler(async (req, res) => {
       filter.state = stateValue;
     }
   }
-  console.log('filter', filter);
-  const zipcodes = await Zipcode
+  let zipcodes = await Zipcode
     .find(filter)
     .select('zip primary_city state county')
     .sort({ zip: 1 })
-    // .limit(200)
     .lean();
 
-  console.log(zipcodes);
+  if (hasCityFilter && state && zipcodes.length === 0) {
+    const stateOnlyFilter = { ...filter };
+    delete stateOnlyFilter.$or;
+
+    zipcodes = await Zipcode
+      .find(stateOnlyFilter)
+      .select('zip primary_city state county')
+      .sort({ zip: 1 })
+      .lean();
+  }
+
   res.json(zipcodes);
 });
-
-
-
-
-
-// TYPE: CITY, STATE , COUNTRY, STATE

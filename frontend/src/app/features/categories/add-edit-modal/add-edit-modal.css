@@ -416,6 +416,75 @@ small,
   font-weight: 700;
 }
 
+.location-accordion {
+  margin-top: 8px;
+  border: 1px solid #d9dde0;
+  border-radius: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.location-accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 0;
+  border-bottom: 1px solid #edf0f2;
+  background: #fff;
+  color: #17212b;
+  text-align: left;
+  cursor: pointer;
+}
+
+.location-accordion-header:hover {
+  background: #f7f9fa;
+}
+
+.location-accordion-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.location-accordion-title strong {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.location-accordion-title small,
+.location-accordion-meta {
+  color: #6f777d;
+  font-size: 11px;
+}
+
+.location-accordion-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.accordion-chevron {
+  width: 14px;
+  text-align: center;
+  color: #17212b;
+  font-weight: 700;
+}
+
+.location-accordion-body {
+  /* padding: 12px;
+  background: #fff; */
+      padding: 12px;
+    max-height: 550px;
+    overflow: auto;
+    background: #fff;
+}
+
 /* Zipcodes Table */
 .zipcodes-wrap {
   margin-top: 8px;
@@ -600,3 +669,5 @@ small,
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
