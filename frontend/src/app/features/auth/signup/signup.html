@@ -1,0 +1,51 @@
+<main class="auth-page">
+  <section class="auth-panel">
+    <div class="auth-copy">
+      <p class="eyebrow">FindPros</p>
+      <h1>Create your account</h1>
+      <p>Start with a secure user account today, with roles ready for future admin and user expansion.</p>
+    </div>
+
+    <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="card-header">
+        <h2>Sign Up</h2>
+        <p>Your session will be protected with an HTTP-only token cookie.</p>
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <label class="field">
+        <span>Name</span>
+        <input type="text" formControlName="name" placeholder="Full name" autocomplete="name" />
+        <small *ngIf="form.controls.name.touched && form.controls.name.invalid">
+          Name is required.
+        </small>
+      </label>
+
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" />
+        <small *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Enter a valid email address.
+        </small>
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" formControlName="password" placeholder="Minimum 8 characters" autocomplete="new-password" />
+        <small *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          Password must be at least 8 characters.
+        </small>
+      </label>
+
+      <button type="submit" class="primary-action" [disabled]="loading">
+        {{ loading ? 'Creating...' : 'Create Account' }}
+      </button>
+
+      <p class="switch-link">
+        Already have an account?
+        <a routerLink="/login">Sign in</a>
+      </p>
+    </form>
+  </section>
+</main>

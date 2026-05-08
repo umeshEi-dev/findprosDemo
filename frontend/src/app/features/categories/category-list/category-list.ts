@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { finalize, forkJoin } from 'rxjs';
+import { AuthService } from '../../../core/auth/auth.service';
 import { Category } from '../../../core/models/category.model';
 import { CategoryFilters } from '../../../core/models/filter.model';
 import { Task } from '../../../core/models/task.model';
@@ -24,6 +25,7 @@ interface CategoryTableRow {
 })
 export class CategoryListComponent implements OnInit {
   private readonly api = inject(CategoryApiService);
+  readonly auth = inject(AuthService);
 
   readonly categories = signal<Category[]>([]);
   readonly tasks = signal<Task[]>([]);

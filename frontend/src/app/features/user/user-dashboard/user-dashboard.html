@@ -1,0 +1,24 @@
+<main class="user-shell">
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">FindPros</p>
+      <h1>Dashboard</h1>
+    </div>
+    <div class="topbar-actions">
+      <a *ngIf="auth.isAdmin()" routerLink="/admin" class="secondary-action">Admin Panel</a>
+      <button type="button" class="logout-action" (click)="auth.logout()">Logout</button>
+    </div>
+  </header>
+
+  <section class="welcome-band">
+    <div>
+      <h2>Hello, {{ auth.user()?.name || 'there' }}</h2>     
+    </div>
+    <dl>
+      <div>
+        <dt>Email</dt>
+        <dd>{{ auth.user()?.email }}</dd>
+      </div>      
+    </dl>
+  </section> 
+</main>

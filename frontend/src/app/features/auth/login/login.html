@@ -1,0 +1,43 @@
+<main class="auth-page">
+  <section class="auth-panel">
+    <div class="auth-copy">
+      <p class="eyebrow">FindPros</p>
+      <h1>Welcome back</h1>
+      <p>Sign in to manage your profile, access protected tools, and continue into the right workspace.</p>
+    </div>
+
+    <form class="auth-card" [formGroup]="form" (ngSubmit)="submit()">
+      <div class="card-header">
+        <h2>Login</h2>
+        <p>Use your account email and password.</p>
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <label class="field">
+        <span>Email</span>
+        <input type="email" formControlName="email" placeholder="you@example.com" autocomplete="email" />
+        <small *ngIf="form.controls.email.touched && form.controls.email.invalid">
+          Enter a valid email address.
+        </small>
+      </label>
+
+      <label class="field">
+        <span>Password</span>
+        <input type="password" formControlName="password" placeholder="••••••••" autocomplete="current-password" />
+        <small *ngIf="form.controls.password.touched && form.controls.password.invalid">
+          Password must be at least 8 characters.
+        </small>
+      </label>
+
+      <button type="submit" class="primary-action" [disabled]="loading">
+        {{ loading ? 'Signing in...' : 'Sign In' }}
+      </button>
+
+      <p class="switch-link">
+        New to FindPros?
+        <a routerLink="/signup">Create an account</a>
+      </p>
+    </form>
+  </section>
+</main>

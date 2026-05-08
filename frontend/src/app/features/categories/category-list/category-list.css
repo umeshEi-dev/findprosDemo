@@ -74,16 +74,27 @@
   white-space: nowrap;
 }
 
-.add-button {
+.add-button,
+.logout-button {
   min-width: 152px;
   height: 36px;
   border: 0;
   border-radius: 4px;
-  background: #ef3b22;
-  color: #fff;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.add-button {
+  background: #ef3b22;
+  color: #fff;
+}
+
+.logout-button {
+  min-width: 78px;
+  border: 1px solid #cbd3da;
+  background: #fff;
+  color: #17212b;
 }
 
 .table-wrap {
