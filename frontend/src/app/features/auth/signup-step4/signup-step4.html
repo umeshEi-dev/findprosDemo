@@ -1,0 +1,50 @@
+<main class="signup-step">
+  <section class="step-panel">
+    <div class="step-header">
+      <p class="eyebrow">Step 4 of 4</p>
+      <h1>Privacy Policy & Terms Agreement</h1>
+      <p>Review the terms below and accept before submitting your signup request.</p>
+    </div>
+
+    <div class="panel-body">
+      <div class="agreement-card">
+        <h2>Privacy Policy</h2>
+        <p>We collect service area, service category, and business information to connect qualified users to appropriate leads. Your information is stored securely and only used to evaluate your account.</p>
+      </div>
+
+      <div class="agreement-card">
+        <h2>Terms & Conditions</h2>
+        <p>By joining, you agree to provide accurate business information and comply with the marketplace terms while your account is reviewed for activation.</p>
+      </div>
+
+      <label class="checkbox-field">
+        <input type="checkbox" [checked]="acceptedTerms" (change)="acceptTerms()" />
+        <span>I agree to the Privacy Policy and Terms & Conditions</span>
+      </label>
+
+      <div class="summary-grid">
+        <div>
+          <h3>Service Areas</h3>
+          <ul>
+            <li *ngFor="let area of serviceAreas">{{ area.location }} ({{ area.mode }})</li>
+          </ul>
+        </div>
+        <div>
+          <h3>Services</h3>
+          <ul>
+            <li *ngFor="let category of categories">{{ category.name }}</li>
+          </ul>
+        </div>
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </div>
+
+    <div class="actions-row">
+      <a routerLink="/signup/step3" class="secondary-action">Back</a>
+      <button type="button" class="primary-action" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Submitting…' : 'Submit' }}
+      </button>
+    </div>
+  </section>
+</main>

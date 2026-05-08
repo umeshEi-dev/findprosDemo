@@ -1,0 +1,76 @@
+<main class="signup-step">
+  <section class="step-panel">
+    <div class="step-header">
+      <p class="eyebrow">Step 3 of 4</p>
+      <h1>Business Information</h1>
+      <p>Provide the details we need to complete your onboarding request.</p>
+    </div>
+
+    <form class="panel-body" [formGroup]="form" (ngSubmit)="next()">
+      <div class="grid-two">
+        <label class="field">
+          <span>First Name</span>
+          <input type="text" formControlName="firstName" autocomplete="given-name" />
+          <small *ngIf="form.controls.firstName.touched && form.controls.firstName.invalid">This field is required.</small>
+        </label>
+
+        <label class="field">
+          <span>Last Name</span>
+          <input type="text" formControlName="lastName" autocomplete="family-name" />
+          <small *ngIf="form.controls.lastName.touched && form.controls.lastName.invalid">This field is required.</small>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Email Address</span>
+        <input type="email" formControlName="email" autocomplete="email" />
+        <small *ngIf="form.controls.email.touched && form.controls.email.invalid">Enter a valid email.</small>
+      </label>
+
+      <div class="grid-two">
+        <label class="field">
+          <span>Phone</span>
+          <input type="tel" formControlName="phone" autocomplete="tel" />
+          <small *ngIf="form.controls.phone.touched && form.controls.phone.invalid">This field is required.</small>
+        </label>
+
+        <label class="field">
+          <span>Company Name</span>
+          <input type="text" formControlName="companyName" />
+          <small *ngIf="form.controls.companyName.touched && form.controls.companyName.invalid">This field is required.</small>
+        </label>
+      </div>
+
+      <label class="field">
+        <span>Business Address</span>
+        <input type="text" formControlName="businessAddress" autocomplete="street-address" />
+        <small *ngIf="form.controls.businessAddress.touched && form.controls.businessAddress.invalid">This field is required.</small>
+      </label>
+
+      <div class="grid-three">
+        <label class="field">
+          <span>City</span>
+          <input type="text" formControlName="city" autocomplete="address-level2" />
+          <small *ngIf="form.controls.city.touched && form.controls.city.invalid">This field is required.</small>
+        </label>
+
+        <label class="field">
+          <span>State</span>
+          <input type="text" formControlName="state" autocomplete="address-level1" />
+          <small *ngIf="form.controls.state.touched && form.controls.state.invalid">This field is required.</small>
+        </label>
+
+        <label class="field">
+          <span>Zipcode</span>
+          <input type="text" formControlName="zipcode" autocomplete="postal-code" />
+          <small *ngIf="form.controls.zipcode.touched && form.controls.zipcode.invalid">This field is required.</small>
+        </label>
+      </div>
+
+      <div class="actions-row">
+        <a routerLink="/signup/step2" class="secondary-action">Back</a>
+        <button type="submit" class="primary-action">Next</button>
+      </div>
+    </form>
+  </section>
+</main>

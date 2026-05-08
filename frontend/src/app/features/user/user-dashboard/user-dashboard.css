@@ -137,3 +137,66 @@ article h3 {
     grid-template-columns: 1fr;
   }
 }
+
+.dashboard-grid {
+  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin: 0 auto;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid #d9dde0;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.7);
+  padding: 16px;
+  z-index: 20;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.18);
+}
+
+.modal-card .field {
+  margin-bottom: 16px;
+}
+
+.modal-card input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+}
+
+.modal-card .primary-action {
+  width: 100%;
+}
+
+.modal-actions {
+  margin-top: 18px;
+}
+
+.form-error {
+  color: #b91c1c;
+  margin-top: 12px;
+}
+
+@media (max-width: 760px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

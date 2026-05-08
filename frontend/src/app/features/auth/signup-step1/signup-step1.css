@@ -1,0 +1,111 @@
+.signup-step {
+  padding: 24px;
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.step-header {
+  margin-bottom: 24px;
+}
+
+.step-header h1 {
+  margin: 0 0 12px;
+  font-size: 1.75rem;
+}
+
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+}
+
+.search-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+.search-button,
+.secondary-action,
+.primary-action,
+.chip-toggle,
+.chip-remove {
+  border: none;
+  padding: 10px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.search-button,
+.primary-action {
+  background: #ec4b20;
+  color: #fff;
+}
+
+.secondary-action,
+.secondary,
+.chip-toggle,
+.chip-remove {
+  background: #f4f4f4;
+  color: #2f2f2f;
+}
+
+.suggestions {
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+
+.suggestion-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.selected-list h2 {
+  margin: 0 0 10px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chip {
+  background: #fff6f0;
+  color: #9a3412;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid #f0d4c4;
+}
+
+.form-error {
+  color: #b91c1c;
+  margin-top: 12px;
+}
+
+.actions-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.primary-action {
+  min-width: 128px;
+}

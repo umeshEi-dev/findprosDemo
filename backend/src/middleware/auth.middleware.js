@@ -35,7 +35,7 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
 
   const user = await User.findById(payload.sub).select('_id name email role status');
 
-  if (!user || user.status !== 'active') {
+  if (!user || !['active', 'pending'].includes(user.status)) {
     const error = new Error('User account is not active');
     error.statusCode = 401;
     throw error;
@@ -44,6 +44,20 @@ export const requireAuth = asyncHandler(async (req, _res, next) => {
   req.user = user;
   next();
 });
+
+export const requireActiveAuth = [
+  requireAuth,
+  (req, _res, next) => {
+    if (req.user.status !== 'active') {
+      const error = new Error('User account is not active');
+      error.statusCode = 401;
+      next(error);
+      return;
+    }
+
+    next();
+  }
+];
 
 export const requireRoles = (...roles) => (req, _res, next) => {
   if (!roles.length || roles.includes(req.user?.role)) {

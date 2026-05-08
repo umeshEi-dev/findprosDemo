@@ -3,7 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthResponse, AuthUser, LoginPayload, SignUpPayload } from './auth.model';
+import { AuthResponse, AuthUser, LoginPayload, SignUpPayload, SignUpOnboardingPayload } from './auth.model';
 
 const USER_STORAGE_KEY = 'findpros.auth.user';
 
@@ -26,6 +26,17 @@ export class AuthService {
       map(response => response.user),
       tap(user => this.setUser(user))
     );
+  }
+
+  signUpOnboarding(payload: SignUpOnboardingPayload): Observable<AuthUser> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/onboarding`, payload).pipe(
+      map(response => response.user),
+      tap(user => this.setUser(user))
+    );
+  }
+
+  setPassword(password: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/set-password`, { password });
   }
 
   login(payload: LoginPayload): Observable<AuthUser> {
@@ -56,6 +67,11 @@ export class AuthService {
   }
 
   redirectAfterAuth(user: AuthUser): void {
+    if (user.status === 'pending') {
+      this.router.navigate(['/dashboard']);
+      return;
+    }
+
     this.router.navigate([user.role === 'admin' ? '/admin' : '/user']);
   }
 

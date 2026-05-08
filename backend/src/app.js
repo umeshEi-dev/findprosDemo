@@ -3,11 +3,12 @@ import express from 'express';
 import authRoutes from './routes/auth.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
-import { requireAuth } from './middleware/auth.middleware.js';
+import { requireActiveAuth } from './middleware/auth.middleware.js';
 import locationRoutes from './routes/location.routes.js';
 import taskLocationRoutes from './routes/task-location.routes.js';
 import taskRoutes from './routes/task.routes.js';
 import zipcodeRoutes from './routes/zipcode.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 const allowedOrigins = new Set([
@@ -36,11 +37,12 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-app.use('/api/categories', requireAuth, categoryRoutes);
-app.use('/api/tasks', requireAuth, taskRoutes);
-app.use('/api', requireAuth, locationRoutes);
-app.use('/api', requireAuth, zipcodeRoutes);
-app.use('/api', requireAuth, taskLocationRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/tasks', requireActiveAuth, taskRoutes);
+app.use('/api', locationRoutes);
+app.use('/api', zipcodeRoutes);
+app.use('/api', requireActiveAuth, taskLocationRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

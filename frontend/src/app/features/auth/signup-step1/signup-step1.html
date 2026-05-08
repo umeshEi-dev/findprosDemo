@@ -1,0 +1,51 @@
+<main class="signup-step">
+  <section class="step-panel">
+    <div class="step-header">
+      <p class="eyebrow">Step 1 of 4</p>
+      <h1>Enter A Location And Choose To Include Or Exclude From Your Service Area</h1>
+      <p>Search locations, then mark them as included or excluded from your service area.</p>
+    </div>
+
+    <div class="panel-body">
+      <label class="field">
+        <span>Search locations</span>
+        <div class="search-row">
+          <input type="text" [formControl]="searchControl" placeholder="Search city or state" (keyup.enter)="search()" />
+          <button type="button" class="search-button" (click)="search()" [disabled]="loading">Search</button>
+        </div>
+        <small *ngIf="searchControl.touched && searchControl.invalid">Enter at least 2 characters to search.</small>
+      </label>
+
+      <div *ngIf="suggestions.length" class="suggestions">
+        <div *ngFor="let location of suggestions" class="suggestion-item">
+          <div>
+            <strong>{{ location.location }}</strong>
+            <span>{{ location.city }}, {{ location.state }}</span>
+          </div>
+          <div class="suggestion-actions">
+            <button type="button" (click)="addLocation(location, 'include')">Include</button>
+            <button type="button" class="secondary" (click)="addLocation(location, 'exclude')">Exclude</button>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedAreas.length" class="selected-list">
+        <h2>Selected areas</h2>
+        <div *ngFor="let area of selectedAreas; let i = index" class="chip-row">
+          <span class="chip">{{ area.location }} — {{ area.mode }}</span>
+          <button type="button" class="chip-toggle" (click)="toggleMode(i)">
+            Mark {{ area.mode === 'include' ? 'Exclude' : 'Include' }}
+          </button>
+          <button type="button" class="chip-remove" (click)="removeArea(i)">Remove</button>
+        </div>
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </div>
+
+    <div class="actions-row">
+      <a routerLink="/signup" class="secondary-action">Back</a>
+      <button type="button" class="primary-action" (click)="next()" [disabled]="loading">Next</button>
+    </div>
+  </section>
+</main>

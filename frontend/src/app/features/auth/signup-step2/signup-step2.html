@@ -1,0 +1,41 @@
+<main class="signup-step">
+  <section class="step-panel">
+    <div class="step-header">
+      <p class="eyebrow">Step 2 of 4</p>
+      <h1>Pick the services you want</h1>
+      <p>Choose the categories you provide, then continue to business details.</p>
+    </div>
+
+    <div class="panel-body">
+      <label class="field">
+        <span>Search services</span>
+        <input type="text" [formControl]="searchControl" placeholder="Search categories" />
+      </label>
+
+      <div *ngIf="loading" class="status-message">Loading categories…</div>
+      <div *ngIf="!loading && !filteredCategories.length" class="status-message">No matching categories found.</div>
+
+      <div *ngIf="filteredCategories.length" class="suggestions">
+        <div *ngFor="let category of filteredCategories" class="suggestion-item">
+          <div>{{ category.name }}</div>
+          <button type="button" (click)="addCategory(category)">Add</button>
+        </div>
+      </div>
+
+      <div *ngIf="selectedCategories.length" class="selected-list">
+        <h2>Selected services</h2>
+        <div *ngFor="let category of selectedCategories; let i = index" class="chip-row">
+          <span class="chip">{{ category.name }}</span>
+          <button type="button" class="chip-remove" (click)="removeCategory(i)">Remove</button>
+        </div>
+      </div>
+
+      <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </div>
+
+    <div class="actions-row">
+      <a routerLink="/signup/step1" class="secondary-action">Back</a>
+      <button type="button" class="primary-action" (click)="next()">Next</button>
+    </div>
+  </section>
+</main>

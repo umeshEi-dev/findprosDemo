@@ -30,6 +30,6 @@ export const publicOnlyGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   return auth.loadCurrentUser().pipe(
-    map(user => user ? router.createUrlTree([user.role === 'admin' ? '/admin' : '/user']) : true)
+    map(user => user && user.status === 'active' ? router.createUrlTree([user.role === 'admin' ? '/admin' : '/user']) : true)
   );
 };

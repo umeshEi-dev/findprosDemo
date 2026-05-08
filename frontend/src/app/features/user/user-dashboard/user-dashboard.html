@@ -6,19 +6,97 @@
     </div>
     <div class="topbar-actions">
       <a *ngIf="auth.isAdmin()" routerLink="/admin" class="secondary-action">Admin Panel</a>
-      <button type="button" class="logout-action" (click)="auth.logout()">Logout</button>
+      <button type="button" class="logout-action" (click)="logout()">Logout</button>
     </div>
   </header>
 
   <section class="welcome-band">
     <div>
-      <h2>Hello, {{ auth.user()?.name || 'there' }}</h2>     
+      <h2>Hello, {{ authUser?.name || 'there' }}</h2>
     </div>
+
     <dl>
       <div>
         <dt>Email</dt>
-        <dd>{{ auth.user()?.email }}</dd>
-      </div>      
+        <dd>{{ authUser?.email }}</dd>
+      </div>
+      <div *ngIf="authUser?.status">
+        <dt>Status</dt>
+        <dd>{{ authUser?.status }}</dd>
+      </div>
     </dl>
-  </section> 
+  </section>
+
+  <section class="dashboard-grid">
+    <div class="panel">
+      <h2>Service Areas</h2>
+      <ul *ngIf="authUser?.serviceAreas?.length; else noServiceAreas">
+        <li *ngFor="let area of authUser?.serviceAreas">{{ area.location }} ({{ area.mode }})</li>
+      </ul>
+      <ng-template #noServiceAreas>
+        <p>No saved service areas available.</p>
+      </ng-template>
+    </div>
+
+    <div class="panel">
+      <h2>Service Categories</h2>
+      <ul *ngIf="authUser?.categories?.length; else noCategories">
+        <li *ngFor="let category of authUser?.categories">{{ category.name }}</li>
+      </ul>
+      <ng-template #noCategories>
+        <p>No saved services available.</p>
+      </ng-template>
+    </div>
+
+    <div class="panel">
+      <h2>Business Information</h2>
+      <dl>
+        <div *ngIf="authUser?.companyName">
+          <dt>Company</dt>
+          <dd>{{ authUser?.companyName }}</dd>
+        </div>
+        <div *ngIf="authUser?.businessAddress">
+          <dt>Address</dt>
+          <dd>{{ authUser?.businessAddress }}, {{ authUser?.city }}, {{ authUser?.state }} {{ authUser?.zipcode }}</dd>
+        </div>
+        <div *ngIf="authUser?.phone">
+          <dt>Phone</dt>
+          <dd>{{ authUser?.phone }}</dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="modal-overlay" *ngIf="showPasswordModal">
+    <section class="modal-card">
+      <h2>Complete account onboarding</h2>
+      <p>Your account is pending admin approval. Set a secure password to finish onboarding.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submitPassword()">
+        <label class="field">
+          <span>Create Password</span>
+          <input type="password" formControlName="password" autocomplete="new-password" />
+          <small *ngIf="form.controls.password.touched && form.controls.password.invalid">
+            Password must be at least 8 characters.
+          </small>
+        </label>
+
+        <label class="field">
+          <span>Confirm Password</span>
+          <input type="password" formControlName="confirmPassword" autocomplete="new-password" />
+          <small *ngIf="form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid">
+            Please confirm your password.
+          </small>
+        </label>
+
+        <p class="form-error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+        <div class="modal-actions">
+          <button type="submit" class="primary-action" [disabled]="loading">
+            {{ loading ? 'Saving...' : 'Save password' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  </div>
 </main>
